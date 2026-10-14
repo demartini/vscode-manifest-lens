@@ -222,7 +222,9 @@ const prepare = (
     registryName: registryName(declaration.name, specifier),
     rewritable:
       support.kind === "supported" &&
-      rewriteSpecifier(specifier, PROBE_VERSION) !== undefined,
+      rewriteSpecifier(specifier, PROBE_VERSION, {
+        section: declaration.section,
+      }) !== undefined,
     specifier,
     support,
   };

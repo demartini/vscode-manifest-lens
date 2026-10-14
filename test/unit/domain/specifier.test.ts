@@ -1,5 +1,7 @@
 import * as assert from "node:assert/strict";
 
+import semver from "semver";
+
 import {
   isRegistryResolvable,
   minimumVersion,
@@ -82,7 +84,7 @@ describe("rewriteSpecifier", () => {
     ["latest", "2.0.0", undefined],
     ["workspace:*", "2.0.0", undefined],
     ["file:../x", "2.0.0", undefined],
-    [">=1 <2", "2.0.0", undefined],
+    [">=1 <2", "2.0.0", ">=1 <3"],
     ["npm:react@^18.0.0", "19.0.0", "npm:react@^19.0.0"],
     ["npm:react", "19.0.0", undefined],
     ["^1.0.0", "not-a-version", undefined],
@@ -111,5 +113,117 @@ describe("minimumVersion / satisfiesSpecifier", () => {
       satisfiesSpecifier(parseSpecifier("workspace:*"), "1.0.0"),
       false
     );
+  });
+});
+
+describe("rewriteSpecifier for complex ranges", () => {
+  type Section = "dependencies" | "peerDependencies";
+  const cases: [string, string, Section, string | undefined][] = [
+    // Comparator sets widen the upper bound just enough to admit the target.
+    [">=1.0.0 <2.0.0", "2.1.0", "dependencies", ">=1.0.0 <3.0.0"],
+    [">=1 <2", "2.0.0", "dependencies", ">=1 <3"],
+    [">=1.0 <2.0", "2.0.0", "dependencies", ">=1.0 <3.0"],
+    [">=1.0.0  <2.0.0", "2.1.0", "dependencies", ">=1.0.0  <3.0.0"],
+    ["<2.0.0 >=1.0.0", "2.1.0", "dependencies", "<3.0.0 >=1.0.0"],
+    [">=1.0.0 <=2.0.0", "2.5.0", "dependencies", ">=1.0.0 <=2.5.0"],
+    [">1.0.0 <2.0.0", "2.1.0", "dependencies", ">1.0.0 <3.0.0"],
+    [">=1.0.0 <2.0.0", "3.0.0-beta.1", "dependencies", ">=1.0.0 <4.0.0"],
+    // Nothing to change, a downgrade, or a bound that has no obvious widening.
+    [">=1.0.0 <2.0.0", "1.5.0", "dependencies", undefined],
+    [">=1.0.0 <2.0.0", "0.5.0", "dependencies", undefined],
+    [">=1.0.0 <1.5.0", "2.0.0", "dependencies", undefined],
+    ["^1.0.0 ^1.2.0", "2.0.0", "dependencies", undefined],
+    // Hyphen ranges move only the upper bound.
+    ["1.0.0 - 2.0.0", "2.3.0", "dependencies", "1.0.0 - 2.3.0"],
+    ["1.0.0 - 2", "3.1.0", "dependencies", "1.0.0 - 3.1.0"],
+    ["1.0.0 - 2.0.0", "1.5.0", "dependencies", undefined],
+    // Unions replace the newest alternative, or append one for peer dependencies.
+    ["^1.0.0 || ^2.0.0", "3.1.0", "dependencies", "^1.0.0 || ^3.1.0"],
+    [
+      "^1.0.0 || ^2.0.0",
+      "3.1.0",
+      "peerDependencies",
+      "^1.0.0 || ^2.0.0 || ^3.1.0",
+    ],
+    ["^1.0.0||^2.0.0", "3.1.0", "dependencies", "^1.0.0||^3.1.0"],
+    ["^1.0.0||^2.0.0", "3.1.0", "peerDependencies", "^1.0.0||^2.0.0||^3.1.0"],
+    ["1.x || 2.x", "3.1.0", "dependencies", "1.x || 3.x"],
+    ["1.x || 2.x", "3.1.0", "peerDependencies", "1.x || 2.x || 3.x"],
+    ["^1.0.0 || ^2.0.0", "2.3.0", "dependencies", undefined],
+    ["^1.0.0 || ^2.0.0", "2.3.0", "peerDependencies", undefined],
+    ["^2.0.0 || ^1.0.0", "3.1.0", "dependencies", "^3.1.0 || ^1.0.0"],
+    [
+      ">=1.0.0 <2.0.0 || ^3.0.0",
+      "4.0.0",
+      "dependencies",
+      ">=1.0.0 <2.0.0 || ^4.0.0",
+    ],
+    [
+      "^1.0.0 || >=2.0.0 <3.0.0",
+      "3.1.0",
+      "dependencies",
+      "^1.0.0 || >=2.0.0 <4.0.0",
+    ],
+    [
+      ">=1.0.0 <2.0.0 || >=3.0.0 <4.0.0",
+      "5.0.0",
+      "peerDependencies",
+      ">=1.0.0 <2.0.0 || >=3.0.0 <4.0.0 || ^5.0.0",
+    ],
+    ["^1.0.0 || ^2.0.0", "0.5.0", "dependencies", undefined],
+  ];
+  for (const [spec, version, section, expected] of cases) {
+    it(`${spec} + ${version} (${section}) -> ${String(expected)}`, () => {
+      assert.equal(
+        rewriteSpecifier(parseSpecifier(spec), version, { section }),
+        expected
+      );
+    });
+  }
+
+  it("rewrites the range inside an npm alias", () => {
+    assert.equal(
+      rewriteSpecifier(parseSpecifier("npm:react@>=17 <19"), "19.0.0"),
+      "npm:react@>=17 <20"
+    );
+  });
+
+  it("never emits a rewrite that does not admit the target", () => {
+    // A small deterministic generator: the property must hold for every shape and version.
+    let seed = 12_345;
+    const random = (limit: number): number => {
+      seed = (seed * 1_103_515_245 + 12_345) % 2_147_483_648;
+      return seed % limit;
+    };
+    const bound = (): string => `${random(5)}.${random(4)}.${random(3)}`;
+    const rangeBuilders: (() => string)[] = [
+      () => `>=${bound()} <${random(5) + 1}.0.0`,
+      () => `>=${bound()} <=${bound()}`,
+      () => `${bound()} - ${bound()}`,
+      () => `^${bound()} || ^${bound()}`,
+      () => `~${bound()} || >=${bound()} <${random(5) + 1}`,
+      () => `${random(5)}.x || ${random(5)}.x`,
+    ];
+    let rewrites = 0;
+    for (let index = 0; index < 600; index += 1) {
+      const spec = rangeBuilders[random(rangeBuilders.length)]?.() ?? "";
+      const version = bound();
+      for (const section of ["dependencies", "peerDependencies"] as const) {
+        const result = rewriteSpecifier(parseSpecifier(spec), version, {
+          section,
+        });
+        if (result === undefined) {
+          continue;
+        }
+        rewrites += 1;
+        assert.notEqual(result, spec, `${spec} + ${version}`);
+        assert.ok(
+          semver.validRange(result) !== null &&
+            semver.satisfies(version, result, { includePrerelease: true }),
+          `${spec} + ${version} -> ${result} must admit ${version}`
+        );
+      }
+    }
+    assert.ok(rewrites > 50, "the generator must exercise real rewrites");
   });
 });

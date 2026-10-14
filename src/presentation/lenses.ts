@@ -69,7 +69,9 @@ export function lensesFor(
   const installed = analysis.installedVersion;
   if (
     installed !== undefined &&
-    rewriteSpecifier(analysis.specifier, installed) !== undefined
+    rewriteSpecifier(analysis.specifier, installed, {
+      section: analysis.declaration.section,
+    }) !== undefined
   ) {
     lenses.push({
       args: [analysis.key],

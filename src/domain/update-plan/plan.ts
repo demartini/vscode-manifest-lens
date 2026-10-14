@@ -117,7 +117,9 @@ export function planSingleUpdate(
       skipped: skip(analysis, "error", analysis.registry.error.message),
     };
   }
-  const newSpecifier = rewriteSpecifier(analysis.specifier, candidate.version);
+  const newSpecifier = rewriteSpecifier(analysis.specifier, candidate.version, {
+    section: analysis.declaration.section,
+  });
   if (!analysis.rewritable || newSpecifier === undefined) {
     return {
       skipped: skip(
@@ -200,7 +202,9 @@ export function planResolveToInstalled(analysis: DependencyAnalysis): {
       skipped: skip(analysis, "no-update", "No installed version was found."),
     };
   }
-  const newSpecifier = rewriteSpecifier(analysis.specifier, installed);
+  const newSpecifier = rewriteSpecifier(analysis.specifier, installed, {
+    section: analysis.declaration.section,
+  });
   if (!analysis.rewritable || newSpecifier === undefined) {
     return {
       skipped: skip(

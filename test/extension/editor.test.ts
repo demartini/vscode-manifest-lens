@@ -356,6 +356,25 @@ describe("editor experience", function editorExperience() {
     }, "the .yarnrc.yml policy to hold the new versions back");
   });
 
+  it("updates a complex range by widening it just enough", async () => {
+    const { document, uri } = await prepare("complex-range", {
+      dependencies: { alpha: ">=1.0.0 <2.0.0" },
+    });
+    await vscode.commands.executeCommand(
+      "manifestLens.updateDependency",
+      keyOf(uri, "alpha"),
+      "2.0.0"
+    );
+    await waitFor(
+      () =>
+        document.getText().includes('"alpha": ">=1.0.0 <3.0.0"')
+          ? true
+          : undefined,
+      "the comparator range to be widened"
+    );
+    assert.equal(document.isDirty, false, "the manifest is saved");
+  });
+
   it("describes a dependency on hover with versions, advisories and blockers", async () => {
     const { document, uri } = await prepare("hover");
     const position = document.positionAt(

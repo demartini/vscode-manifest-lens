@@ -52,7 +52,9 @@ Prereleases are suggested only when enabled, only when newer than every stable c
 
 ### Specifier rewriting
 
-`rewriteSpecifier` preserves the user's convention: `^1.2.3 → ^2.0.0`, `~1.2.3 → ~2.0.0`, `1.x → 2.x`, `npm:react@^18 → npm:react@^19`. It returns nothing (and the UI offers no action) for tags, protocols (`workspace:`, `file:`, `link:`, git/URL), complex ranges (`>=1 <2`, `||`) and upper bounds (`<2`) because any rewrite there would silently change meaning.
+`rewriteSpecifier` preserves the user's convention: `^1.2.3 → ^2.0.0`, `~1.2.3 → ~2.0.0`, `1.x → 2.x`, `npm:react@^18 → npm:react@^19`. It returns nothing (and the UI offers no action) for tags, protocols (`workspace:`, `file:`, `link:`, git/URL) and single upper bounds (`<2`) because any rewrite there would silently change meaning.
+
+Complex ranges (`src/domain/version/range-rewrite.ts`) are widened just enough to admit the target, keeping the user's spacing: comparator sets raise a major-aligned `<N` (or `<=V`) upper bound, hyphen ranges move their upper bound, and unions replace their newest alternative (or, for `peerDependencies`, gain a new one). The target must be above the range; a downgrade, a range that already admits the target, or an upper bound with no obvious widening is not rewritten. Every rewrite is checked with `semver.satisfies` before it is returned, so a rewrite that would not admit the target can never reach the manifest.
 
 ## Peer dependency analysis
 

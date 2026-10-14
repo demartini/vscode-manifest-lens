@@ -1,5 +1,8 @@
 import semver from "semver";
 
+import type { DependencySection } from "../manifest/types";
+import { rewriteComplexRange } from "./range-rewrite";
+
 export type RangeOperator = "" | "<" | "<=" | "=" | ">" | ">=" | "^" | "~";
 
 /** The structured form of a dependency specifier as written in a manifest. */
@@ -235,6 +238,11 @@ const rewritePartial = (
   return rewritten === spec.raw ? undefined : rewritten;
 };
 
+export interface RewriteOptions {
+  /** The section the declaration lives in: peer ranges are widened, not replaced. */
+  readonly section?: DependencySection;
+}
+
 /**
  * Produces a new specifier that targets `version` while preserving the user's
  * range convention. Returns `undefined` when no valid rewrite exists (tags,
@@ -242,7 +250,8 @@ const rewritePartial = (
  */
 export function rewriteSpecifier(
   spec: ParsedSpecifier,
-  version: string
+  version: string,
+  options: RewriteOptions = {}
 ): string | undefined {
   if (semver.valid(version) === null) {
     return undefined;
@@ -258,11 +267,27 @@ export function rewriteSpecifier(
     case "partial": {
       return rewritePartial(spec, version);
     }
+    case "complex": {
+      return rewriteComplexRange(spec.raw, version, {
+        appendAlternative: options.section === "peerDependencies",
+        rewriteSimple: (alternative, target) => {
+          const simple = parseSpecifier(alternative);
+          return simple.kind === "range" || simple.kind === "partial"
+            ? rewriteSpecifier(simple, target)
+            : undefined;
+        },
+      });
+    }
     case "alias": {
-      if (spec.inner.kind !== "range" && spec.inner.kind !== "partial") {
+      const aliased = spec.inner.kind;
+      if (
+        aliased !== "range" &&
+        aliased !== "partial" &&
+        aliased !== "complex"
+      ) {
         return undefined;
       }
-      const inner = rewriteSpecifier(spec.inner, version);
+      const inner = rewriteSpecifier(spec.inner, version, options);
       return inner === undefined ? undefined : `npm:${spec.target}@${inner}`;
     }
     default: {

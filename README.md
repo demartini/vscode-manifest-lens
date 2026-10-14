@@ -148,7 +148,7 @@ A tree in the activity bar that lists manifests → sections → dependencies �
 | `pnpm-workspace.yaml` | `catalog` and named `catalogs`, plus `catalog:` references from member packages |
 | `.yarnrc.yml` (Yarn 4.10+) | `catalog` and named `catalogs`, plus `catalog:` and `catalog:name` references from member packages |
 
-Manifest Lens also understands `workspace:` packages and npm aliases (`npm:pkg@^1.0.0`). Complex ranges (`>=1 <2`, `||`), dist-tags and protocol specifiers are analyzed but not rewritten automatically.
+Manifest Lens also understands `workspace:` packages and npm aliases (`npm:pkg@^1.0.0`). Complex ranges are widened just enough to admit an update: comparator sets (`>=1 <2` becomes `>=1 <3`), hyphen ranges (`1 - 2` becomes `1 - 3.1.0`) and unions (`^1 || ^2` becomes `^1 || ^3`, or gains an alternative in `peerDependencies`). Dist-tags and protocol specifiers are analyzed but not rewritten automatically.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -223,7 +223,7 @@ Details: [docs/security.md](docs/security.md).
 - Vulnerability analysis covers the direct dependencies declared in the manifests; it is not a full transitive-dependency audit.
 - Yarn Plug'n'Play installs have no `node_modules`, so installed versions are unknown and the declared minimum is used (and labeled as such).
 - Private registries that require authentication are not supported, because credentials are deliberately never sent.
-- Complex ranges (`>=1 <2`, `||`), tags and protocol specifiers are analyzed but not rewritten automatically.
+- Complex ranges whose upper bound has no obvious widening (for example `>=1 <1.5`), tags and protocol specifiers are analyzed but not rewritten automatically.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
