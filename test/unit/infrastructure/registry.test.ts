@@ -49,6 +49,44 @@ describe("parsePackument", () => {
     assert.equal(metadata.fetchedAt, 123);
   });
 
+  it("reads the license and the Node engine range of each version", () => {
+    const metadata = parsePackument(
+      {
+        name: "a",
+        versions: {
+          "1.0.0": { engines: { node: ">=18" }, license: "MIT" },
+          "2.0.0": { license: { type: "Apache-2.0", url: "https://x.test" } },
+          "3.0.0": {},
+        },
+      },
+      0
+    );
+    assert.equal(metadata.versions["1.0.0"]?.license, "MIT");
+    assert.equal(metadata.versions["1.0.0"]?.nodeEngine, ">=18");
+    assert.equal(metadata.versions["2.0.0"]?.license, "Apache-2.0");
+    assert.equal(metadata.versions["3.0.0"]?.license, undefined);
+    assert.equal(metadata.versions["3.0.0"]?.nodeEngine, undefined);
+  });
+
+  it("keeps a version whose license or engines are malformed", () => {
+    const metadata = parsePackument(
+      {
+        name: "a",
+        versions: {
+          "1.0.0": { engines: ["node"], license: 42 },
+          "2.0.0": { engines: { node: 18 }, license: "  " },
+          "3.0.0": { license: { type: 7 } },
+        },
+      },
+      0
+    );
+    for (const version of ["1.0.0", "2.0.0", "3.0.0"]) {
+      assert.ok(metadata.versions[version], `${version} is kept`);
+      assert.equal(metadata.versions[version]?.license, undefined);
+      assert.equal(metadata.versions[version]?.nodeEngine, undefined);
+    }
+  });
+
   it("rejects unexpected shapes", () => {
     assert.throws(() => parsePackument({ versions: 3 }, 0), {
       code: "invalid-response",

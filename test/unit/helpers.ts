@@ -16,6 +16,8 @@ export const NOW = Date.parse("2026-01-10T00:00:00Z");
 
 export interface FakeVersion {
   deprecated?: string;
+  license?: string;
+  nodeEngine?: string;
   peers?: Record<string, string>;
   optionalPeers?: string[];
 }
@@ -31,6 +33,10 @@ export const pkg = (
       ...(info?.deprecated === undefined
         ? {}
         : { deprecated: info.deprecated }),
+      ...(info?.license === undefined ? {} : { license: info.license }),
+      ...(info?.nodeEngine === undefined
+        ? {}
+        : { nodeEngine: info.nodeEngine }),
       optionalPeers: info?.optionalPeers ?? [],
       peerDependencies: info?.peers ?? {},
       publishedAt: "2026-01-06T00:00:00Z",

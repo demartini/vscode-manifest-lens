@@ -13,6 +13,7 @@ import {
 import type {
   InstalledPackage,
   PackageMetadata,
+  ReleaseDetails,
 } from "../../domain/dependency/metadata";
 import type {
   DependencyDeclaration,
@@ -28,6 +29,7 @@ import {
   type Candidate,
   type PrereleasePolicy,
   type ReleaseInfo,
+  type VersionSelection,
   selectVersions,
 } from "../../domain/version/candidates";
 import {
@@ -388,6 +390,37 @@ const securityFor = (
 };
 
 /** Runs the full dependency analysis for one manifest. */
+/** License and Node engine for the current version and every candidate the hover can mention. */
+const releaseDetailsOf = (
+  meta: PackageMetadata | undefined,
+  currentVersion: string | undefined,
+  selection: VersionSelection | undefined
+): Record<string, ReleaseDetails> => {
+  const versions = new Set<string>();
+  if (currentVersion !== undefined) {
+    versions.add(currentVersion);
+  }
+  for (const candidate of selection?.stableCandidates ?? []) {
+    versions.add(candidate.version);
+  }
+  if (selection?.prerelease) {
+    versions.add(selection.prerelease.version);
+  }
+  const details: Record<string, ReleaseDetails> = {};
+  for (const version of versions) {
+    const release = meta?.versions[version];
+    if (release?.license !== undefined || release?.nodeEngine !== undefined) {
+      details[version] = {
+        ...(release.license === undefined ? {} : { license: release.license }),
+        ...(release.nodeEngine === undefined
+          ? {}
+          : { nodeEngine: release.nodeEngine }),
+      };
+    }
+  }
+  return details;
+};
+
 export class ManifestAnalyzer {
   private readonly deps: AnalyzerDependencies;
   private readonly logger: Logger;
@@ -744,6 +777,7 @@ export class ManifestAnalyzer {
       peer,
       registry,
       registryName: item.registryName,
+      releaseDetails: releaseDetailsOf(meta, currentVersion, selection),
       ...(selection?.latestSatisfying === undefined
         ? {}
         : { resolvedVersion: selection.latestSatisfying }),

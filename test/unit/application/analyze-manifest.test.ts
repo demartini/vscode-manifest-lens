@@ -323,6 +323,41 @@ describe("ManifestAnalyzer", () => {
     );
   });
 
+  it("exposes the license and Node engine of the current version and of each update candidate", async () => {
+    const { analyzer, registry, installed, request } = setup({
+      dependencies: { a: "^1.0.0" },
+    });
+    registry.add(
+      pkg("a", {
+        "1.0.0": { license: "MIT", nodeEngine: ">=18" },
+        "1.1.0": { license: "MIT", nodeEngine: ">=20" },
+        "2.0.0": { nodeEngine: ">=22" },
+      })
+    );
+    installed.add("a", "1.0.0");
+    const { releaseDetails } = byName(await analyzer.analyze(request), "a");
+    assert.deepEqual(releaseDetails["1.0.0"], {
+      license: "MIT",
+      nodeEngine: ">=18",
+    });
+    assert.deepEqual(releaseDetails["1.1.0"], {
+      license: "MIT",
+      nodeEngine: ">=20",
+    });
+    assert.deepEqual(releaseDetails["2.0.0"], { nodeEngine: ">=22" });
+  });
+
+  it("leaves release details empty when the registry is unavailable", async () => {
+    const { analyzer, registry, request } = setup({
+      dependencies: { a: "^1.0.0" },
+    });
+    registry.fail("a");
+    assert.deepEqual(
+      byName(await analyzer.analyze(request), "a").releaseDetails,
+      {}
+    );
+  });
+
   it("skips security and peer work when disabled", async () => {
     const { advisories, analyzer, registry, request } = setup(
       { dependencies: { a: "^1.0.0" } },

@@ -4,6 +4,7 @@ import type { PeerAnalysis } from "../peer-conflict/types";
 import type { Candidate, VersionSelection } from "../version/candidates";
 import type { ParsedSpecifier } from "../version/specifier";
 import type { MatchedAdvisory } from "../vulnerability/advisory";
+import type { ReleaseDetails } from "./metadata";
 
 export type UnsupportedReason =
   | "catalog-unresolved"
@@ -79,6 +80,8 @@ export interface DependencyAnalysis {
   readonly deprecation?: { readonly version: string; readonly message: string };
   /** Security results keyed by version (current version and update candidates). */
   readonly security: Readonly<Record<string, VersionSecurity>>;
+  /** License and Node engine of the current version and of each update candidate. */
+  readonly releaseDetails: Readonly<Record<string, ReleaseDetails>>;
   /** Peer analysis keyed by candidate version. */
   readonly peer: Readonly<Record<string, PeerAnalysis>>;
   /** Newest candidate not blocked by a confirmed peer conflict, when the target is. */

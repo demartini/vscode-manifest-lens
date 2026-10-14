@@ -22,8 +22,12 @@ const MAX_ENTRIES = 500;
 
 const stringRecord = z.record(z.string(), z.string());
 
+// `engines` and `license` come in several historical shapes; they are read leniently
+// so a malformed value never drops the whole version.
 const versionSchema = z.looseObject({
   deprecated: z.union([z.string(), z.boolean()]).optional(),
+  engines: z.unknown().optional(),
+  license: z.unknown().optional(),
   peerDependencies: stringRecord.optional(),
   peerDependenciesMeta: z
     .record(z.string(), z.looseObject({ optional: z.boolean().optional() }))
@@ -77,6 +81,30 @@ export function normalizeRepositoryUrl(
   return isHttpUrl(value) ? value : undefined;
 }
 
+const MAX_TEXT_LENGTH = 200;
+
+const textOf = (value: unknown): string | undefined => {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed !== "" && trimmed.length <= MAX_TEXT_LENGTH
+    ? trimmed
+    : undefined;
+};
+
+const recordOf = (value: unknown): Record<string, unknown> | undefined =>
+  typeof value === "object" && value !== null && !Array.isArray(value)
+    ? Object.fromEntries(Object.entries(value))
+    : undefined;
+
+/** `license` is a string, or the legacy `{ type, url }` object. */
+const licenseOf = (raw: unknown): string | undefined =>
+  textOf(raw) ?? textOf(recordOf(raw)?.type);
+
+const nodeEngineOf = (raw: unknown): string | undefined =>
+  textOf(recordOf(raw)?.node);
+
 const toVersion = (
   version: string,
   raw: z.infer<typeof versionSchema>,
@@ -92,8 +120,12 @@ const toVersion = (
   const optionalPeers = Object.entries(raw.peerDependenciesMeta ?? {})
     .filter(([, meta]) => meta.optional === true)
     .map(([name]) => name);
+  const license = licenseOf(raw.license);
+  const nodeEngine = nodeEngineOf(raw.engines);
   return {
     ...(deprecated === undefined ? {} : { deprecated }),
+    ...(license === undefined ? {} : { license }),
+    ...(nodeEngine === undefined ? {} : { nodeEngine }),
     optionalPeers,
     peerDependencies: raw.peerDependencies ?? {},
     ...(publishedAt === undefined ? {} : { publishedAt }),
