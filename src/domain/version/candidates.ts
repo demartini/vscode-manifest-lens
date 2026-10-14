@@ -24,10 +24,10 @@ export interface PrereleasePolicy {
   readonly tags: readonly string[];
 }
 
-/** Versions published less than `minimumMs` ago are not suggested. */
+/** A version published less than `limitMs(version)` ago is not suggested. */
 export interface ReleaseAgePolicy {
-  readonly minimumMs: number;
   readonly now: number;
+  readonly limitMs: (version: string) => number;
 }
 
 export interface VersionSelectionInput {
@@ -65,11 +65,12 @@ const isTooYoung = (
   release: ReleaseInfo,
   policy: ReleaseAgePolicy | undefined
 ): boolean => {
-  if (policy === undefined || policy.minimumMs <= 0) {
+  const limit = policy?.limitMs(release.version) ?? 0;
+  if (policy === undefined || limit <= 0) {
     return false;
   }
   const published = Date.parse(release.publishedAt ?? "");
-  return !Number.isNaN(published) && policy.now - published < policy.minimumMs;
+  return !Number.isNaN(published) && policy.now - published < limit;
 };
 
 const toCandidate = (base: string, release: ReleaseInfo): Candidate => ({

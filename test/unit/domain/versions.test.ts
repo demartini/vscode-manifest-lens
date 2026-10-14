@@ -159,7 +159,7 @@ describe("selectVersions with a minimum release age", () => {
   const DAY = 24 * 60 * 60 * 1000;
   const ageOf = (days: number): string =>
     new Date(now - days * DAY).toISOString();
-  const releaseAge = { minimumMs: 3 * DAY, now };
+  const releaseAge = { limitMs: () => 3 * DAY, now };
   const select = (
     published: Record<string, string | undefined>,
     extra: Partial<Parameters<typeof selectVersions>[0]> = {}
@@ -214,7 +214,7 @@ describe("selectVersions with a minimum release age", () => {
 
   it("is a no-op without a limit or with a limit of zero", () => {
     const published = { "1.0.0": ageOf(100), "1.1.0": ageOf(1) };
-    for (const age of [undefined, { minimumMs: 0, now }]) {
+    for (const age of [undefined, { limitMs: () => 0, now }]) {
       const result = select(published, {
         ...(age === undefined
           ? { releaseAge: undefined }
@@ -223,6 +223,23 @@ describe("selectVersions with a minimum release age", () => {
       assert.equal(result.target?.version, "1.1.0");
       assert.deepEqual(result.heldBack, []);
     }
+  });
+
+  it("applies a different limit to each version", () => {
+    const result = select(
+      { "1.0.0": ageOf(100), "1.1.0": ageOf(2), "1.2.0": ageOf(2) },
+      {
+        releaseAge: {
+          limitMs: (version) => (version === "1.1.0" ? 0 : 3 * DAY),
+          now,
+        },
+      }
+    );
+    assert.equal(result.target?.version, "1.1.0");
+    assert.deepEqual(
+      result.heldBack.map((candidate) => candidate.version),
+      ["1.2.0"]
+    );
   });
 
   it("does not suggest a prerelease younger than the limit", () => {

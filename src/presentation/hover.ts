@@ -86,7 +86,7 @@ const updateLines = (
   if (selection.heldBack.length > 0) {
     const count = selection.heldBack.length;
     lines.push(
-      `_${count} newer ${count === 1 ? "version is" : "versions are"} held back by ${code("manifestLens.minimumReleaseAge")}._`
+      `_${count} newer ${count === 1 ? "version is" : "versions are"} held back by the minimum release age (${code("manifestLens.minimumReleaseAge")} or the package manager's own setting)._`
     );
   }
   const { target } = selection;

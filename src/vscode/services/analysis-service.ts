@@ -11,6 +11,7 @@ import type {
 } from "../../domain/dependency/analysis";
 import { parseManifestText } from "../../domain/manifest/parse";
 import type { ParsedManifest } from "../../domain/manifest/types";
+import type { ManagerReleaseAge } from "../../domain/package-manager/release-age";
 import type { ManifestLensError } from "../../shared/errors";
 import { isCancellation, normalizeError } from "../../shared/errors";
 import type { Logger } from "../../shared/logger";
@@ -65,6 +66,10 @@ export class AnalysisService implements vscode.Disposable {
   constructor(
     private readonly deps: {
       analyzer: ManifestAnalyzer;
+      /** The package manager's configured minimum release age for a manifest, if any. */
+      managerReleaseAge: (
+        manifestUri: string
+      ) => Promise<ManagerReleaseAge | undefined>;
       index: WorkspaceIndex;
       config: () => ManifestLensConfig;
       logger: Logger;
@@ -269,11 +274,13 @@ export class AnalysisService implements vscode.Disposable {
       }
       await this.deps.index.refreshOne(uri, false);
       const config = this.deps.config();
+      const managerReleaseAge = await this.deps.managerReleaseAge(uri);
       const analysis = await this.deps.analyzer.analyze({
         documentVersion: read.version,
         localPackageNames: config.workspace.enabled
           ? this.deps.index.localPackageNames()
           : new Set(),
+        ...(managerReleaseAge ? { managerReleaseAge } : {}),
         manifestDir: dirOf(uri),
         manifestUri: uri,
         parsed,

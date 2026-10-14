@@ -10,11 +10,13 @@ import {
 import type { ManifestLensConfig } from "./config/configuration-schema";
 import { manifestFormatOf } from "./domain/manifest/parse";
 import { NpmDownloadsClient } from "./infrastructure/downloads/npm-downloads-client";
+import { nodeFileProbe } from "./infrastructure/filesystem/node-file-probe";
 import { HttpClient } from "./infrastructure/http/http-client";
 import { NodeInstalledPackages } from "./infrastructure/installed-packages/node-installed-packages";
 import { OutputChannelLogger } from "./infrastructure/logging/output-channel-logger";
 import { OSV_BASE_URL, OsvClient } from "./infrastructure/osv/osv-client";
 import { Installer } from "./infrastructure/package-manager/installer";
+import { readManagerReleaseAge } from "./infrastructure/package-manager/release-age-reader";
 import { NpmRegistryClient } from "./infrastructure/registry/npm-registry-client";
 import { OperationRunner } from "./vscode/commands/operation-runner";
 import { registerCommands } from "./vscode/commands/register-commands";
@@ -38,8 +40,9 @@ const REGISTRY_MAX_BYTES = 64 * 1024 * 1024;
 const OSV_MAX_BYTES = 8 * 1024 * 1024;
 const SMALL_MAX_BYTES = 1024 * 1024;
 const OSV_CACHE_MS = 15 * 60 * 1000;
+// Lockfiles decide the package manager; its configuration files decide the minimum release age.
 const LOCKFILES =
-  "**/{package-lock.json,npm-shrinkwrap.json,pnpm-lock.yaml,yarn.lock,bun.lock,bun.lockb}";
+  "**/{package-lock.json,npm-shrinkwrap.json,pnpm-lock.yaml,yarn.lock,bun.lock,bun.lockb,bunfig.toml,.npmrc}";
 
 /** Handles for integration tests; this is not a public, supported API. */
 export interface ManifestLensTestApi {
@@ -107,11 +110,22 @@ export function activate(
     registry,
   });
   const index = track(new WorkspaceIndex(logger));
-  const analysis = track(
-    new AnalysisService({ analyzer, config: getConfig, index, logger, now })
-  );
   const resolver = track(
     new PackageManagerResolver(() => config.packageManager)
+  );
+  const analysis = track(
+    new AnalysisService({
+      analyzer,
+      config: getConfig,
+      index,
+      logger,
+      managerReleaseAge: async (manifestUri) =>
+        await readManagerReleaseAge(
+          nodeFileProbe,
+          await resolver.resolve(manifestUri)
+        ),
+      now,
+    })
   );
   const views = new DocumentViews(analysis);
   const ui = track(new UiState(config.codeLens.showOnStartup));

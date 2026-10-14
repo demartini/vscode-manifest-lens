@@ -19,6 +19,10 @@ import type {
   DependencyDeclaration,
   ParsedManifest,
 } from "../../domain/manifest/types";
+import {
+  type ManagerReleaseAge,
+  isExcludedFromReleaseAge,
+} from "../../domain/package-manager/release-age";
 import { analyzePeerCompatibility } from "../../domain/peer-conflict/analysis";
 import type {
   PeerAnalysis,
@@ -79,6 +83,8 @@ export interface AnalyzeRequest {
   ) => CatalogEntry | undefined;
   /** Dependency names declared by sibling manifests of the same workspace. */
   readonly workspaceDependencyNames: readonly string[];
+  /** The package manager's own minimum release age, when the project configures one. */
+  readonly managerReleaseAge?: ManagerReleaseAge;
   readonly signal?: AbortSignal;
 }
 
@@ -392,6 +398,25 @@ const securityFor = (
 };
 
 /** Runs the full dependency analysis for one manifest. */
+/**
+ * How long a version must have been published: the stricter of the user's setting and
+ * the package manager's own, which does not apply to packages it excludes.
+ */
+const releaseAgeLimit =
+  (
+    name: string,
+    ownMinutes: number,
+    manager: ManagerReleaseAge | undefined
+  ): ((version: string) => number) =>
+  (version) =>
+    Math.max(
+      ownMinutes,
+      manager === undefined ||
+        isExcludedFromReleaseAge(manager.exclude, name, version)
+        ? 0
+        : manager.minimumMinutes
+    ) * 60_000;
+
 /** License and Node engine for the current version and every candidate the hover can mention. */
 const releaseDetailsOf = (
   meta: PackageMetadata | undefined,
@@ -456,7 +481,11 @@ export class ManifestAnalyzer {
             distTags: result.value.distTags,
             prerelease: request.settings.prerelease,
             releaseAge: {
-              minimumMs: request.settings.minimumReleaseAge * 60_000,
+              limitMs: releaseAgeLimit(
+                item.registryName,
+                request.settings.minimumReleaseAge,
+                request.managerReleaseAge
+              ),
               now: this.deps.clock.now(),
             },
             releases: toReleases(result.value),

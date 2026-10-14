@@ -276,7 +276,7 @@ describe("hoverMarkdown", () => {
       { now: NOW, prereleaseEnabled: false, showLatestHint: true }
     );
     assert.match(held, /1 newer version is held back/u);
-    assert.match(held, /manifestLens\.minimumReleaseAge/u);
+    assert.match(held, /minimum release age/u);
     const none = hoverMarkdown(patchy, {
       now: NOW,
       prereleaseEnabled: false,

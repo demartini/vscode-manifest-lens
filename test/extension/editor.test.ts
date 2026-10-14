@@ -240,6 +240,26 @@ describe("editor experience", function editorExperience() {
     }, "the new versions to be held back");
   });
 
+  it("holds back versions the package manager's own minimum release age would refuse", async () => {
+    registry.publishedAt = new Date().toISOString();
+    api.clearCaches();
+    const { uri } = await prepare("npmrc-age");
+    const selectionOf = () =>
+      api.analysis
+        .get(uri.toString())
+        ?.analysis?.items.find((item) => item.declaration.name === "alpha")
+        ?.selection;
+    assert.ok(selectionOf()?.target, "alpha has an update before the policy");
+    // The test project has a package-lock.json, so npm is the detected manager.
+    await testCase?.write(".npmrc", "min-release-age=1\n");
+    await waitFor(() => {
+      const selection = selectionOf();
+      return selection?.target === undefined && selection?.heldBack.length
+        ? true
+        : undefined;
+    }, "the .npmrc policy to hold the new versions back");
+  });
+
   it("describes a dependency on hover with versions, advisories and blockers", async () => {
     const { document, uri } = await prepare("hover");
     const position = document.positionAt(

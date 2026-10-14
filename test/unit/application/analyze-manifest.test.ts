@@ -389,6 +389,66 @@ describe("ManifestAnalyzer", () => {
     assert.equal(open.selection?.heldBack.length, 0);
   });
 
+  describe("package manager release age", () => {
+    // The fake registry publishes every version 4 days before NOW (5760 minutes).
+    const analyze = async (
+      managerReleaseAge: AnalyzeRequest["managerReleaseAge"],
+      ownMinutes = 0
+    ) => {
+      const { analyzer, registry, installed, request } = setup(
+        { dependencies: { a: "^1.0.0" } },
+        {
+          managerReleaseAge,
+          settings: {
+            concurrency: 2,
+            minimumReleaseAge: ownMinutes,
+            peerEnabled: true,
+            prerelease: { enabled: false, tags: [] },
+            securityEnabled: true,
+          },
+        }
+      );
+      registry.add(pkg("a", { "1.0.0": {}, "1.1.0": {} }));
+      installed.add("a", "1.0.0");
+      return byName(await analyzer.analyze(request), "a");
+    };
+
+    it("holds back versions the package manager would refuse to install", async () => {
+      const held = await analyze({ exclude: [], minimumMinutes: 7 * 1440 });
+      assert.equal(held.selection?.target, undefined);
+      assert.equal(held.selection?.heldBack.length, 1);
+      const open = await analyze({ exclude: [], minimumMinutes: 1440 });
+      assert.equal(open.selection?.target?.version, "1.1.0");
+    });
+
+    it("exempts packages and versions the package manager excludes", async () => {
+      for (const exclude of ["a", "a@1.1.0", "a@1.0.0 || 1.1.0"]) {
+        const result = await analyze({
+          exclude: [exclude],
+          minimumMinutes: 7 * 1440,
+        });
+        assert.equal(result.selection?.target?.version, "1.1.0", exclude);
+      }
+      const other = await analyze({
+        exclude: ["a@1.2.0"],
+        minimumMinutes: 7 * 1440,
+      });
+      assert.equal(other.selection?.target, undefined);
+    });
+
+    it("keeps the stricter of the user setting and the package manager", async () => {
+      const result = await analyze(
+        { exclude: ["a"], minimumMinutes: 1440 },
+        7 * 1440
+      );
+      assert.equal(
+        result.selection?.target,
+        undefined,
+        "the explicit setting is not lifted by the manager's exclusion"
+      );
+    });
+  });
+
   it("skips security and peer work when disabled", async () => {
     const { advisories, analyzer, registry, request } = setup(
       { dependencies: { a: "^1.0.0" } },
