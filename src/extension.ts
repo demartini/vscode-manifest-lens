@@ -43,7 +43,7 @@ const SMALL_MAX_BYTES = 1024 * 1024;
 const OSV_CACHE_MS = 15 * 60 * 1000;
 // Lockfiles decide the package manager; its configuration files decide the minimum release age.
 const LOCKFILES =
-  "**/{package-lock.json,npm-shrinkwrap.json,pnpm-lock.yaml,yarn.lock,bun.lock,bun.lockb,bunfig.toml,.npmrc}";
+  "**/{package-lock.json,npm-shrinkwrap.json,pnpm-lock.yaml,yarn.lock,bun.lock,bun.lockb,bunfig.toml,.npmrc,.yarnrc.yml}";
 
 /** Handles for integration tests; this is not a public, supported API. */
 export interface ManifestLensTestApi {

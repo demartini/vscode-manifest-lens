@@ -5,6 +5,7 @@ import {
   parseBunReleaseAge,
   parseNpmReleaseAge,
   parsePnpmReleaseAge,
+  parseYarnReleaseAge,
 } from "../../../src/domain/package-manager/release-age";
 
 describe("parsePnpmReleaseAge", () => {
@@ -137,6 +138,64 @@ describe("parseNpmReleaseAge", () => {
     ]) {
       assert.equal(parseNpmReleaseAge(text), undefined, JSON.stringify(text));
     }
+  });
+});
+
+describe("parseYarnReleaseAge", () => {
+  // The formats below are the ones Yarn 4.18.1 itself accepts for npmMinimalAgeGate.
+  const minutes = (value: string): number | undefined =>
+    parseYarnReleaseAge(`npmMinimalAgeGate: ${value}`)?.minimumMinutes;
+
+  it("reads a number of minutes or a single duration", () => {
+    assert.equal(minutes("10"), 10);
+    assert.equal(minutes("90m"), 90);
+    assert.equal(minutes("12h"), 720);
+    assert.equal(minutes("3d"), 4320);
+    assert.equal(minutes("1w"), 10_080);
+    assert.equal(minutes("1.5h"), 90);
+    assert.equal(minutes("'3d'"), 4320);
+    assert.equal(minutes('"1w"'), 10_080);
+  });
+
+  it("rounds a fraction of a minute up", () => {
+    assert.equal(minutes("30s"), 1);
+  });
+
+  it("ignores values Yarn itself rejects, zero and a missing setting", () => {
+    for (const value of [
+      "1d 12h",
+      "1d12h",
+      "2 days",
+      "1y",
+      "-1d",
+      "0",
+      "soon",
+    ]) {
+      assert.equal(minutes(value), undefined, value);
+    }
+    assert.equal(parseYarnReleaseAge("nodeLinker: pnp\n"), undefined);
+    assert.equal(
+      parseYarnReleaseAge("a:\n  npmMinimalAgeGate: 1d\n"),
+      undefined
+    );
+    assert.equal(parseYarnReleaseAge("npmMinimalAgeGate: [1"), undefined);
+    assert.equal(parseYarnReleaseAge(""), undefined);
+  });
+
+  it("reads preapproved package names and globs, and drops descriptors", () => {
+    assert.deepEqual(
+      parseYarnReleaseAge(
+        [
+          "npmMinimalAgeGate: 1d",
+          "npmPreapprovedPackages:",
+          "  - react",
+          '  - "@types/*"',
+          '  - "lodash@npm:^4"',
+          "  - 3",
+        ].join("\n")
+      ),
+      { exclude: ["react", "@types/*"], minimumMinutes: 1440 }
+    );
   });
 });
 

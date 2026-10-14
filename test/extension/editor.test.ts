@@ -336,6 +336,26 @@ describe("editor experience", function editorExperience() {
     assert.equal(document.isDirty, false, "the manifest is saved");
   });
 
+  it("holds back versions Yarn's own npmMinimalAgeGate would refuse", async () => {
+    registry.publishedAt = new Date().toISOString();
+    api.clearCaches();
+    const { uri } = await prepare("yarnrc-age");
+    const selectionOf = () =>
+      api.analysis
+        .get(uri.toString())
+        ?.analysis?.items.find((item) => item.declaration.name === "alpha")
+        ?.selection;
+    assert.ok(selectionOf()?.target, "alpha has an update before the policy");
+    // A .yarnrc.yml selects Yarn even though the test project also has a package-lock.json.
+    await testCase?.write(".yarnrc.yml", "npmMinimalAgeGate: 1d\n");
+    await waitFor(() => {
+      const selection = selectionOf();
+      return selection?.target === undefined && selection?.heldBack.length
+        ? true
+        : undefined;
+    }, "the .yarnrc.yml policy to hold the new versions back");
+  });
+
   it("describes a dependency on hover with versions, advisories and blockers", async () => {
     const { document, uri } = await prepare("hover");
     const position = document.positionAt(

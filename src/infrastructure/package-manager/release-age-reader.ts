@@ -5,6 +5,7 @@ import {
   parseBunReleaseAge,
   parseNpmReleaseAge,
   parsePnpmReleaseAge,
+  parseYarnReleaseAge,
 } from "../../domain/package-manager/release-age";
 import type { PackageManagerDetection } from "../../domain/package-manager/types";
 import type { FileProbe } from "./detect";
@@ -26,11 +27,12 @@ const FILES: Readonly<
     names: ["pnpm-workspace.yaml", "pnpm-workspace.yml"],
     parse: parsePnpmReleaseAge,
   },
+  yarn: { names: [".yarnrc.yml"], parse: parseYarnReleaseAge },
 };
 
 /**
  * The minimum release age the project's package manager is configured with, read from
- * the install root. Yarn is not read: its setting is only documented for unreleased versions.
+ * the install root.
  */
 export async function readManagerReleaseAge(
   probe: FileProbe,

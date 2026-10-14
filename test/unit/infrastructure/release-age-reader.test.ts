@@ -16,6 +16,7 @@ describe("readManagerReleaseAge", () => {
     const files = {
       "/r/.npmrc": "min-release-age=1",
       "/r/bunfig.toml": "[install]\nminimumReleaseAge = 7200",
+      "/r/.yarnrc.yml": "npmMinimalAgeGate: 3d",
       "/r/pnpm-workspace.yaml": "minimumReleaseAge: 2880",
     };
     const probe = probeOf(files);
@@ -31,6 +32,10 @@ describe("readManagerReleaseAge", () => {
       (await readManagerReleaseAge(probe, detection("npm")))?.minimumMinutes,
       1440
     );
+    assert.equal(
+      (await readManagerReleaseAge(probe, detection("yarn")))?.minimumMinutes,
+      4320
+    );
   });
 
   it("accepts the .yml spelling of pnpm-workspace", async () => {
@@ -41,7 +46,7 @@ describe("readManagerReleaseAge", () => {
     );
   });
 
-  it("returns nothing when the file is missing, has no policy, or the manager is not supported", async () => {
+  it("returns nothing when the file is missing or has no policy", async () => {
     assert.equal(
       await readManagerReleaseAge(probeOf({}), detection("pnpm")),
       undefined
@@ -55,7 +60,7 @@ describe("readManagerReleaseAge", () => {
     );
     assert.equal(
       await readManagerReleaseAge(
-        probeOf({ "/r/.yarnrc.yml": "npmMinimalAgeGate: 1w" }),
+        probeOf({ "/r/.yarnrc.yml": "nodeLinker: pnp" }),
         detection("yarn")
       ),
       undefined

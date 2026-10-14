@@ -49,5 +49,6 @@ Besides `manifestLens.minimumReleaseAge`, Manifest Lens reads the minimum releas
 | pnpm | `pnpm-workspace.yaml` | `minimumReleaseAge`, `minimumReleaseAgeExclude` | minutes |
 | Bun | `bunfig.toml` | `[install]` `minimumReleaseAge`, `minimumReleaseAgeExcludes` | seconds |
 | npm | `.npmrc` | `min-release-age` | days |
+| Yarn | `.yarnrc.yml` | `npmMinimalAgeGate`, `npmPreapprovedPackages` | minutes, or one value like `90m`, `12h`, `3d`, `1w` |
 
-Only an explicit setting is read: defaults that a newer manager version applies on its own are not detected. Yarn's `npmMinimalAgeGate` is not read yet.
+Only an explicit setting is read: defaults that a newer manager version applies on its own are not detected. For Yarn, preapproved package names and globs are honoured; descriptors such as `lodash@npm:^4` are ignored, so that package stays gated.

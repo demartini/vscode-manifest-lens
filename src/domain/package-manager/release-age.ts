@@ -65,6 +65,55 @@ export function parseNpmReleaseAge(
   return undefined;
 }
 
+const YARN_UNIT_MINUTES: Readonly<Record<string, number>> = {
+  d: 1440,
+  h: 60,
+  m: 1,
+  s: 1 / 60,
+  w: 10_080,
+};
+
+/**
+ * Yarn's duration grammar as Yarn 4.18.1 accepts it: a number of minutes, or one number
+ * followed by `s`, `m`, `h`, `d` or `w`. Compound values ("1d12h") and words are rejected by Yarn.
+ */
+const yarnDurationMinutes = (value: unknown): number | undefined => {
+  if (typeof value === "number") {
+    return value;
+  }
+  const match =
+    typeof value === "string"
+      ? /^(\d+(?:\.\d+)?)([smhdw])?$/u.exec(value)
+      : null;
+  if (match?.[1] === undefined) {
+    return undefined;
+  }
+  return Number(match[1]) * (YARN_UNIT_MINUTES[match[2] ?? "m"] ?? 1);
+};
+
+/**
+ * `npmMinimalAgeGate` and `npmPreapprovedPackages` in `.yarnrc.yml`. A preapproved
+ * descriptor (`name@npm:^4`) is dropped: keeping the package gated is the safe direction.
+ */
+export function parseYarnReleaseAge(
+  text: string
+): ManagerReleaseAge | undefined {
+  let document: unknown;
+  try {
+    document = parse(text);
+  } catch {
+    return undefined;
+  }
+  if (!isRecord(document)) {
+    return undefined;
+  }
+  const minutes = yarnDurationMinutes(document.npmMinimalAgeGate);
+  const preapproved = stringsOf(document.npmPreapprovedPackages).filter(
+    (entry) => !entry.slice(1).includes("@")
+  );
+  return minutes === undefined ? undefined : policyOf(minutes, preapproved);
+}
+
 /** Removes a trailing `#` comment, leaving `#` inside quotes alone. */
 const stripTomlComment = (line: string): string => {
   let quote: string | undefined;
