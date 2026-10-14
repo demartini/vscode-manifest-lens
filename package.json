@@ -46,11 +46,15 @@
     "vscode:prepublish": "bun run compile -- --minify",
     "watch": "tsdown --watch"
   },
+  "dependencies": {
+    "semver": "^7.8.5"
+  },
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",
     "@commitlint/config-conventional": "^21.2.3",
     "@types/mocha": "^10.0.10",
     "@types/node": "^26.6.5",
+    "@types/semver": "^7.8.0",
     "lefthook": "^2.2.2",
     "mocha": "^12.0.3",
     "oxfmt": "^0.73.0",
