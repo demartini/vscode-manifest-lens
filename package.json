@@ -35,6 +35,7 @@
   },
   "qna": "marketplace",
   "publisher": "demartini",
+  "main": "./dist/extension.cjs",
   "scripts": {
     "check": "ultracite check",
     "check-types": "tsc --noEmit",
