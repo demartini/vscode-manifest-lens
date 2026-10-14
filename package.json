@@ -58,6 +58,7 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "^26.6.5",
     "@types/semver": "^7.8.0",
+    "@types/vscode": "1.140.0",
     "lefthook": "^2.2.2",
     "mocha": "^12.0.3",
     "oxfmt": "^0.73.0",
@@ -67,5 +68,618 @@
     "typescript": "^6.0.3",
     "ultracite": "8.0.1"
   },
-  "packageManager": "bun@1.4.3"
+  "contributes": {
+    "commands": [
+      {
+        "command": "manifestLens.checkUpdates",
+        "title": "Check for dependency updates",
+        "category": "Manifest Lens",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "manifestLens.refresh",
+        "title": "Refresh dependency data",
+        "category": "Manifest Lens",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "manifestLens.showSuggestions",
+        "title": "Show version suggestions",
+        "category": "Manifest Lens",
+        "icon": "$(eye-closed)"
+      },
+      {
+        "command": "manifestLens.hideSuggestions",
+        "title": "Hide version suggestions",
+        "category": "Manifest Lens",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "manifestLens.showPrerelease",
+        "title": "Show prerelease versions",
+        "category": "Manifest Lens",
+        "icon": "$(beaker)"
+      },
+      {
+        "command": "manifestLens.hidePrerelease",
+        "title": "Hide prerelease versions",
+        "category": "Manifest Lens",
+        "icon": "$(beaker)"
+      },
+      {
+        "command": "manifestLens.updateAll",
+        "title": "Update all dependencies to latest",
+        "category": "Manifest Lens"
+      },
+      {
+        "command": "manifestLens.updateMajor",
+        "title": "Update dependencies (major only)",
+        "category": "Manifest Lens"
+      },
+      {
+        "command": "manifestLens.updateMinor",
+        "title": "Update dependencies (minor only)",
+        "category": "Manifest Lens"
+      },
+      {
+        "command": "manifestLens.updatePatch",
+        "title": "Update dependencies (patch only)",
+        "category": "Manifest Lens"
+      },
+      {
+        "command": "manifestLens.sortDependencies",
+        "title": "Sort dependencies alphabetically",
+        "category": "Manifest Lens",
+        "icon": "$(sort-precedence)"
+      },
+      {
+        "command": "manifestLens.install",
+        "title": "Run install for this package.json",
+        "category": "Manifest Lens",
+        "icon": "$(desktop-download)"
+      },
+      {
+        "command": "manifestLens.openDashboard",
+        "title": "Open Manifest Lens dashboard",
+        "category": "Manifest Lens",
+        "icon": "$(package)"
+      },
+      {
+        "command": "manifestLens.analyzeWorkspace",
+        "title": "Analyze workspace dependencies",
+        "category": "Manifest Lens",
+        "icon": "$(search)"
+      },
+      {
+        "command": "manifestLens.checkVulnerabilities",
+        "title": "Check vulnerabilities",
+        "category": "Manifest Lens",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "manifestLens.updateDependency",
+        "title": "Upgrade selected dependency",
+        "category": "Manifest Lens",
+        "icon": "$(arrow-up)"
+      },
+      {
+        "command": "manifestLens.updateDependencyAndInstall",
+        "title": "Upgrade selected dependency and install",
+        "category": "Manifest Lens",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "manifestLens.resolveToInstalled",
+        "title": "Resolve to installed version",
+        "category": "Manifest Lens"
+      },
+      {
+        "command": "manifestLens.updateBlockedDependency",
+        "title": "Upgrade blocked dependency",
+        "category": "Manifest Lens"
+      },
+      {
+        "command": "manifestLens.cancel",
+        "title": "Cancel active analysis or installation",
+        "category": "Manifest Lens",
+        "icon": "$(stop-circle)"
+      },
+      {
+        "command": "manifestLens.showDiagnostics",
+        "title": "Show extension diagnostics and cache status",
+        "category": "Manifest Lens"
+      },
+      {
+        "command": "manifestLens.clearCache",
+        "title": "Clear caches",
+        "category": "Manifest Lens"
+      },
+      {
+        "command": "manifestLens.showAdvisories",
+        "title": "Show advisories for dependency",
+        "category": "Manifest Lens"
+      },
+      {
+        "command": "manifestLens.showConflicts",
+        "title": "Show peer dependency conflicts",
+        "category": "Manifest Lens"
+      },
+      {
+        "command": "manifestLens.updateSection",
+        "title": "Update dependencies in section",
+        "category": "Manifest Lens"
+      },
+      {
+        "command": "manifestLens.openPackagePage",
+        "title": "Open package page",
+        "category": "Manifest Lens"
+      },
+      {
+        "command": "manifestLens.openAdvisory",
+        "title": "Open advisory reference",
+        "category": "Manifest Lens",
+        "icon": "$(link-external)"
+      },
+      {
+        "command": "manifestLens.revealDeclaration",
+        "title": "Go to declaration",
+        "category": "Manifest Lens"
+      },
+      {
+        "command": "manifestLens.dashboard.filterSeverity",
+        "title": "Filter by update severity",
+        "category": "Manifest Lens",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "manifestLens.dashboard.filterVulnerable",
+        "title": "Toggle: show only vulnerable dependencies",
+        "category": "Manifest Lens"
+      },
+      {
+        "command": "manifestLens.dashboard.filterBlocked",
+        "title": "Toggle: show only blocked dependencies",
+        "category": "Manifest Lens"
+      },
+      {
+        "command": "manifestLens.dashboard.clearFilters",
+        "title": "Clear dashboard filters",
+        "category": "Manifest Lens",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "manifestLens.dashboard.selectManifest",
+        "title": "Select manifest to show",
+        "category": "Manifest Lens",
+        "icon": "$(list-selection)"
+      },
+      {
+        "command": "manifestLens.dashboard.updateAll",
+        "title": "Update all eligible dependencies in the dashboard",
+        "category": "Manifest Lens",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "manifestLens.dashboard.updatePatch",
+        "title": "Update patch-level dependencies in the dashboard",
+        "category": "Manifest Lens",
+        "icon": "$(versions)"
+      }
+    ],
+    "configuration": {
+      "title": "Manifest Lens",
+      "properties": {
+        "manifestLens.registry": {
+          "type": "string",
+          "default": "https://registry.npmjs.org/",
+          "markdownDescription": "URL of the npm-compatible registry used to look up package metadata. Must be `https://` (plain `http://` is accepted for loopback hosts only). No credentials are ever sent. Ignored in untrusted workspaces.",
+          "scope": "window"
+        },
+        "manifestLens.cacheTimeout": {
+          "type": "number",
+          "default": 300000,
+          "minimum": 0,
+          "markdownDescription": "How long registry metadata is cached, in milliseconds."
+        },
+        "manifestLens.showVersionStatus": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Show an inline annotation at the end of each dependency line."
+        },
+        "manifestLens.annotations.minimumUpdateSeverity": {
+          "type": "string",
+          "enum": [
+            "patch",
+            "minor",
+            "major"
+          ],
+          "default": "patch",
+          "markdownDescription": "Hide update annotations below this severity. Advisories, deprecations, blocked updates and errors are always shown."
+        },
+        "manifestLens.showLatestVersionHint": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Show the latest published and latest compatible versions when hovering a dependency."
+        },
+        "manifestLens.codeLens.enabled": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Enable dependency CodeLens entries (resolve, update, install)."
+        },
+        "manifestLens.codeLens.showUpToDate": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Also show CodeLens entries for dependencies that are up to date."
+        },
+        "manifestLens.codeLens.showOnStartup": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Show version suggestions when the window opens. Use the editor toolbar to toggle them for the current session."
+        },
+        "manifestLens.prerelease.enabled": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Suggest prerelease versions. A stable version is never silently replaced by a prerelease."
+        },
+        "manifestLens.prerelease.tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "markdownDescription": "Only suggest prereleases whose first prerelease identifier is in this list (for example `beta`, `rc`, `next`). Empty means any."
+        },
+        "manifestLens.security.enabled": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Check dependency versions against the [OSV](https://osv.dev) vulnerability database. Package names and versions are sent to `api.osv.dev`."
+        },
+        "manifestLens.security.warnBeforeAdvisoryUpgrade": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Ask for confirmation before applying an update whose version has known advisories."
+        },
+        "manifestLens.peerDependencies.enabled": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Analyze peer dependency compatibility before an update is suggested."
+        },
+        "manifestLens.packageManager": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "npm",
+            "pnpm",
+            "yarn",
+            "bun"
+          ],
+          "default": "auto",
+          "markdownDescription": "Package manager used for installs. `auto` uses the lockfile, then the `packageManager` field. Ignored in untrusted workspaces.",
+          "scope": "window"
+        },
+        "manifestLens.updatePolicy": {
+          "type": "string",
+          "enum": [
+            "conservative",
+            "force"
+          ],
+          "default": "conservative",
+          "markdownDescription": "`conservative` excludes updates with confirmed peer conflicts from bulk updates. `force` includes them after an explicit warning. Peer checks are never bypassed silently."
+        },
+        "manifestLens.analysis.concurrency": {
+          "type": "number",
+          "default": 4,
+          "minimum": 1,
+          "maximum": 16,
+          "markdownDescription": "Maximum number of concurrent registry, advisory and filesystem lookups."
+        },
+        "manifestLens.analysis.timeout": {
+          "type": "number",
+          "default": 10000,
+          "minimum": 1000,
+          "maximum": 120000,
+          "markdownDescription": "Timeout for an individual network request, in milliseconds."
+        },
+        "manifestLens.workspace.enabled": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Discover every manifest in the workspace (monorepos, catalogs, workspace packages) instead of only open files."
+        },
+        "manifestLens.logging.level": {
+          "type": "string",
+          "enum": [
+            "off",
+            "error",
+            "warn",
+            "info",
+            "debug"
+          ],
+          "default": "warn",
+          "markdownDescription": "Verbosity of the Manifest Lens output channel."
+        }
+      }
+    },
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "manifestLens.openAdvisory",
+          "when": "false"
+        },
+        {
+          "command": "manifestLens.openPackagePage",
+          "when": "false"
+        },
+        {
+          "command": "manifestLens.resolveToInstalled",
+          "when": "false"
+        },
+        {
+          "command": "manifestLens.revealDeclaration",
+          "when": "false"
+        },
+        {
+          "command": "manifestLens.showAdvisories",
+          "when": "false"
+        },
+        {
+          "command": "manifestLens.showConflicts",
+          "when": "false"
+        },
+        {
+          "command": "manifestLens.updateBlockedDependency",
+          "when": "false"
+        },
+        {
+          "command": "manifestLens.updateDependency",
+          "when": "false"
+        },
+        {
+          "command": "manifestLens.updateDependencyAndInstall",
+          "when": "false"
+        },
+        {
+          "command": "manifestLens.updateSection",
+          "when": "false"
+        },
+        {
+          "command": "manifestLens.showSuggestions",
+          "when": "!manifestLens.suggestionsVisible"
+        },
+        {
+          "command": "manifestLens.hideSuggestions",
+          "when": "manifestLens.suggestionsVisible"
+        },
+        {
+          "command": "manifestLens.showPrerelease",
+          "when": "!manifestLens.prereleaseEnabled"
+        },
+        {
+          "command": "manifestLens.hidePrerelease",
+          "when": "manifestLens.prereleaseEnabled"
+        },
+        {
+          "command": "manifestLens.sortDependencies",
+          "when": "manifestLens.activeManifestIsPackageJson"
+        },
+        {
+          "command": "manifestLens.install",
+          "when": "manifestLens.activeManifest && isWorkspaceTrusted"
+        },
+        {
+          "command": "manifestLens.dashboard.filterVulnerable",
+          "when": "false"
+        },
+        {
+          "command": "manifestLens.dashboard.filterBlocked",
+          "when": "false"
+        },
+        {
+          "command": "manifestLens.dashboard.updateAll",
+          "when": "false"
+        },
+        {
+          "command": "manifestLens.dashboard.updatePatch",
+          "when": "false"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "manifestLens.hideSuggestions",
+          "when": "manifestLens.activeManifest && manifestLens.suggestionsVisible",
+          "group": "navigation@1"
+        },
+        {
+          "command": "manifestLens.showSuggestions",
+          "when": "manifestLens.activeManifest && !manifestLens.suggestionsVisible",
+          "group": "navigation@1"
+        },
+        {
+          "command": "manifestLens.hidePrerelease",
+          "when": "manifestLens.activeManifest && manifestLens.prereleaseEnabled",
+          "group": "navigation@2"
+        },
+        {
+          "command": "manifestLens.showPrerelease",
+          "when": "manifestLens.activeManifest && !manifestLens.prereleaseEnabled",
+          "group": "navigation@2"
+        },
+        {
+          "command": "manifestLens.checkUpdates",
+          "when": "manifestLens.activeManifest",
+          "group": "navigation@3"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "manifestLens.sortDependencies",
+          "when": "manifestLens.activeManifestIsPackageJson",
+          "group": "manifestLens@1"
+        },
+        {
+          "command": "manifestLens.install",
+          "when": "manifestLens.activeManifest && isWorkspaceTrusted",
+          "group": "manifestLens@2"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "manifestLens.refresh",
+          "when": "view == manifestLens.dashboard",
+          "group": "navigation@1"
+        },
+        {
+          "command": "manifestLens.dashboard.updateAll",
+          "when": "view == manifestLens.dashboard",
+          "group": "navigation@2"
+        },
+        {
+          "command": "manifestLens.dashboard.updatePatch",
+          "when": "view == manifestLens.dashboard",
+          "group": "navigation@3"
+        },
+        {
+          "command": "manifestLens.dashboard.filterSeverity",
+          "when": "view == manifestLens.dashboard",
+          "group": "navigation@4"
+        },
+        {
+          "command": "manifestLens.dashboard.selectManifest",
+          "when": "view == manifestLens.dashboard",
+          "group": "navigation@5"
+        },
+        {
+          "command": "manifestLens.dashboard.filterVulnerable",
+          "when": "view == manifestLens.dashboard",
+          "group": "filters@1"
+        },
+        {
+          "command": "manifestLens.dashboard.filterBlocked",
+          "when": "view == manifestLens.dashboard",
+          "group": "filters@2"
+        },
+        {
+          "command": "manifestLens.dashboard.clearFilters",
+          "when": "view == manifestLens.dashboard",
+          "group": "filters@3"
+        },
+        {
+          "command": "manifestLens.analyzeWorkspace",
+          "when": "view == manifestLens.dashboard",
+          "group": "more@1"
+        },
+        {
+          "command": "manifestLens.checkVulnerabilities",
+          "when": "view == manifestLens.dashboard",
+          "group": "more@2"
+        },
+        {
+          "command": "manifestLens.cancel",
+          "when": "view == manifestLens.dashboard && manifestLens.busy",
+          "group": "navigation@0"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "manifestLens.updateDependency",
+          "when": "view == manifestLens.dashboard && viewItem =~ /dependency\\.(updatable|blocked)/",
+          "group": "inline@1"
+        },
+        {
+          "command": "manifestLens.updateDependencyAndInstall",
+          "when": "view == manifestLens.dashboard && viewItem =~ /dependency\\.updatable/ && isWorkspaceTrusted",
+          "group": "inline@2"
+        },
+        {
+          "command": "manifestLens.updateDependency",
+          "when": "view == manifestLens.dashboard && viewItem =~ /dependency\\.(updatable|blocked)/",
+          "group": "actions@1"
+        },
+        {
+          "command": "manifestLens.updateDependencyAndInstall",
+          "when": "view == manifestLens.dashboard && viewItem =~ /dependency\\.(updatable|blocked)/ && isWorkspaceTrusted",
+          "group": "actions@2"
+        },
+        {
+          "command": "manifestLens.updateBlockedDependency",
+          "when": "view == manifestLens.dashboard && viewItem =~ /dependency\\.blocked/",
+          "group": "actions@3"
+        },
+        {
+          "command": "manifestLens.resolveToInstalled",
+          "when": "view == manifestLens.dashboard && viewItem =~ /dependency/",
+          "group": "actions@4"
+        },
+        {
+          "command": "manifestLens.revealDeclaration",
+          "when": "view == manifestLens.dashboard && viewItem =~ /dependency|section|manifest/",
+          "group": "navigation@1"
+        },
+        {
+          "command": "manifestLens.openPackagePage",
+          "when": "view == manifestLens.dashboard && viewItem =~ /dependency/",
+          "group": "navigation@2"
+        },
+        {
+          "command": "manifestLens.updateSection",
+          "when": "view == manifestLens.dashboard && viewItem =~ /section/",
+          "group": "actions@1"
+        },
+        {
+          "command": "manifestLens.install",
+          "when": "view == manifestLens.dashboard && viewItem =~ /manifest/ && isWorkspaceTrusted",
+          "group": "actions@2"
+        },
+        {
+          "command": "manifestLens.openAdvisory",
+          "when": "view == manifestLens.dashboard && viewItem =~ /advisory/",
+          "group": "inline@1"
+        }
+      ]
+    },
+    "views": {
+      "manifestLens": [
+        {
+          "id": "manifestLens.dashboard",
+          "name": "Dependencies",
+          "contextualTitle": "Manifest Lens",
+          "icon": "images/manifest-lens.svg"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "manifestLens",
+          "title": "Manifest Lens",
+          "icon": "images/manifest-lens.svg"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "manifestLens.dashboard",
+        "contents": "No supported manifest was found in this workspace.\nOpen a folder that contains a `package.json` or `pnpm-workspace.yaml`.\n[Analyze workspace](command:manifestLens.analyzeWorkspace)"
+      }
+    ]
+  },
+  "activationEvents": [
+    "onLanguage:json",
+    "onLanguage:yaml",
+    "workspaceContains:**/package.json",
+    "workspaceContains:**/pnpm-workspace.yaml"
+  ],
+  "engines": {
+    "vscode": "^1.140.0"
+  },
+  "packageManager": "bun@1.4.3",
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "Manifest Lens analyzes manifests in untrusted workspaces, but it never runs package manager commands and ignores workspace-level registry and package manager settings until the workspace is trusted.",
+      "restrictedConfigurations": [
+        "manifestLens.registry",
+        "manifestLens.packageManager"
+      ]
+    }
+  }
 }
