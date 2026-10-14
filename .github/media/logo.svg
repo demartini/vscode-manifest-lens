@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1254 1254" width="1254" height="1254">
+  <title>Manifest Lens</title>
+
+  <defs>
+    <mask id="lens-cutout" maskUnits="userSpaceOnUse" x="0" y="0" width="1254" height="1254">
+      <rect width="1254" height="1254" fill="#fff"/>
+      <circle cx="775" cy="705" r="229" fill="#000"/>
+    </mask>
+  </defs>
+
+  <!-- Package -->
+  <g mask="url(#lens-cutout)">
+  <path d="M487 540 780 392V745L487 868Z" fill="#d3d9f3"/>
+  <path d="M487 540 780 392V500L618 548Z" fill="#c9d0ee"/>
+  <path d="M247 440q0-22 21-30l219 130v328q-17 2-32-8L268 755q-21-14-21-40Z" fill="#d6dcf5"/>
+  <path d="M265 410 555 265q20-10 43 0L765 355q15 8 15 30v7L487 540 268 410Z" fill="#eef0fb"/>
+  <path d="M388 350 475 305 703 430 618 478Z" fill="#2d79e8"/>
+  <path d="M618 478 703 432V492L618 545Z" fill="#0f47a8"/>
+  <g stroke="#0f1626" stroke-width="26" stroke-linecap="round" fill="none">
+    <path d="M303 553 450 630"/>
+    <path d="M303 630 395 682"/>
+  </g>
+
+  </g>
+
+  <!-- Magnifier -->
+  <circle cx="775" cy="705" r="143" fill="#0f1626"/>
+  <circle cx="775" cy="705" r="171.5" fill="none" stroke="#2e86ff" stroke-width="57"/>
+  <path d="M935 830 982 878" stroke="#2e86ff" stroke-width="72" stroke-linecap="round"/>
+  <g stroke="#f1f3fb" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M727 667 685 707 727 748"/>
+    <path d="M825 667 868 707 825 748"/>
+    <path d="M797 641 756 770"/>
+  </g>
+
+  <!-- Status legend -->
+  <g>
+    <circle cx="844" cy="298" r="27" fill="#26d194"/>
+    <rect x="892" y="283" width="129" height="30" rx="15" fill="#26d194"/>
+    <circle cx="844" cy="371" r="27" fill="#ffc144"/>
+    <rect x="892" y="356" width="128" height="30" rx="15" fill="#ffc144"/>
+    <circle cx="844" cy="443" r="27" fill="#f95a5a"/>
+    <rect x="892" y="428" width="125" height="30" rx="15" fill="#f95a5a"/>
+  </g>
+</svg>
