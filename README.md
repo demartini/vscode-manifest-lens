@@ -8,7 +8,7 @@
 
 <div align="center">
 
-[![Contributors][contributors-shield]][contributors-url] [![Forks][forks-shield]][forks-url] [![Stargazers][stars-shield]][stars-url] [![Issues][issues-shield]][issues-url] [![License][license-shield]][license-url]
+[![VS Marketplace][vs-marketplace-shield]][vs-marketplace-url] [![Open VSX][open-vsx-shield]][open-vsx-url] [![Stargazers][stars-shield]][stars-url] [![Issues][issues-shield]][issues-url] [![License][license-shield]][license-url]
 
 </div>
 
@@ -113,7 +113,7 @@ A tree in the activity bar that lists manifests → sections → dependencies �
 
 ## Getting Started
 
-1. Install **Manifest Lens** from the VS Code Marketplace (or Open VSX), or install a `.vsix` from the [releases page](https://github.com/demartini/vscode-manifest-lens/releases):
+1. Install **Manifest Lens** from the [VS Code Marketplace][vs-marketplace-url] (or [Open VSX][open-vsx-url]), or install a `.vsix` from the [releases page][releases-url]:
 
    ```sh
    code --install-extension demartini.manifest-lens
@@ -243,14 +243,15 @@ Distributed under the MIT License. See [LICENSE][license-url] for details.
 
 [changelog-url]: https://github.com/demartini/vscode-manifest-lens/blob/main/CHANGELOG.md
 [contributing-url]: https://github.com/demartini/.github/blob/main/CONTRIBUTING.md
-[pull-request-url]: https://github.com/demartini/vscode-manifest-lens/pulls
-[contributors-shield]: https://img.shields.io/github/contributors/demartini/vscode-manifest-lens.svg?style=for-the-badge&color=8bd5ca&labelColor=181926
-[contributors-url]: https://github.com/demartini/vscode-manifest-lens/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/demartini/vscode-manifest-lens.svg?style=for-the-badge&color=8bd5ca&labelColor=181926
-[forks-url]: https://github.com/demartini/vscode-manifest-lens/network/members
 [issues-shield]: https://img.shields.io/github/issues/demartini/vscode-manifest-lens.svg?style=for-the-badge&color=8bd5ca&labelColor=181926
 [issues-url]: https://github.com/demartini/vscode-manifest-lens/issues
 [license-shield]: https://img.shields.io/github/license/demartini/vscode-manifest-lens.svg?style=for-the-badge&color=8bd5ca&labelColor=181926
 [license-url]: https://github.com/demartini/vscode-manifest-lens/blob/main/LICENSE
+[open-vsx-shield]: https://img.shields.io/open-vsx/v/demartini/manifest-lens?style=for-the-badge&color=8bd5ca&labelColor=181926
+[open-vsx-url]: https://open-vsx.org/extension/demartini/manifest-lens
+[pull-request-url]: https://github.com/demartini/vscode-manifest-lens/pulls
+[releases-url]: https://github.com/demartini/vscode-manifest-lens/releases
 [stars-shield]: https://img.shields.io/github/stars/demartini/vscode-manifest-lens.svg?style=for-the-badge&color=8bd5ca&labelColor=181926
 [stars-url]: https://github.com/demartini/vscode-manifest-lens/stargazers
+[vs-marketplace-shield]: https://img.shields.io/github/package-json/v/demartini/vscode-manifest-lens?label=VS%20Marketplace&style=for-the-badge&color=8bd5ca&labelColor=181926
+[vs-marketplace-url]: https://marketplace.visualstudio.com/items?itemName=demartini.manifest-lens
