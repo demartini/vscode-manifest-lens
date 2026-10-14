@@ -4,6 +4,7 @@ import {
   currentSecurity,
   introducedAdvisories,
 } from "../domain/dependency/analysis";
+import { nodeCompatibility } from "../domain/version/node-compat";
 import { compareSeverity } from "../domain/vulnerability/advisory";
 import { formatCount, formatRelativeTime } from "../shared/utilities/time";
 import { blockersOf } from "./annotation";
@@ -15,6 +16,8 @@ export interface HoverContext {
   readonly showLatestHint: boolean;
   readonly monthlyDownloads?: number;
   readonly prereleaseEnabled: boolean;
+  /** The Node range the project declares, to flag updates that need a newer one. */
+  readonly projectNodeEngine?: string;
 }
 
 const MAX_ADVISORIES = 5;
@@ -26,6 +29,11 @@ const row = (label: string, value: string | undefined): string | undefined =>
 const code = (value: string): string => `\`${value.replaceAll("`", "'")}\``;
 
 const versionLine = (analysis: DependencyAnalysis): string[] => {
+  const { currentVersion } = analysis;
+  const license =
+    currentVersion === undefined
+      ? undefined
+      : analysis.releaseDetails[currentVersion]?.license;
   const lines: (string | undefined)[] = [
     row("Declared", code(analysis.declaration.specifier)),
     row(
@@ -40,8 +48,47 @@ const versionLine = (analysis: DependencyAnalysis): string[] => {
         ? undefined
         : code(analysis.resolvedVersion)
     ),
+    row("License", license === undefined ? undefined : code(license)),
   ];
   return lines.filter((line): line is string => line !== undefined);
+};
+
+/** Warnings about what the target release changes: its license and the Node it needs. */
+const targetReleaseWarnings = (
+  analysis: DependencyAnalysis,
+  context: HoverContext
+): string[] => {
+  const target = analysis.selection?.target;
+  if (!target) {
+    return [];
+  }
+  const warnings: string[] = [];
+  const { currentVersion } = analysis;
+  const before =
+    currentVersion === undefined
+      ? undefined
+      : analysis.releaseDetails[currentVersion]?.license;
+  const details = analysis.releaseDetails[target.version];
+  if (
+    before !== undefined &&
+    details?.license !== undefined &&
+    details.license !== before
+  ) {
+    warnings.push(
+      `⚠ **License changes in ${code(target.version)}:** ${code(before)} → ${code(details.license)}`
+    );
+  }
+  if (
+    context.projectNodeEngine !== undefined &&
+    details?.nodeEngine !== undefined &&
+    nodeCompatibility(context.projectNodeEngine, details.nodeEngine) ===
+      "incompatible"
+  ) {
+    warnings.push(
+      `⚠ ${code(target.version)} requires Node ${code(details.nodeEngine)}; this project declares ${code(context.projectNodeEngine)}.`
+    );
+  }
+  return warnings;
 };
 
 const updateLines = (
@@ -97,6 +144,7 @@ const updateLines = (
   if (target?.potentiallyBreaking) {
     lines.push(`_${code(target.version)} may contain breaking changes._`);
   }
+  lines.push(...targetReleaseWarnings(analysis, context));
   return lines;
 };
 
@@ -198,7 +246,13 @@ const actionLinks = (analysis: DependencyAnalysis): string[] => {
       ])
     );
   }
-  links.push(safeLink("npm", analysis.links.npm));
+  links.push(
+    safeLink("npm", analysis.links.npm),
+    safeLink("Versions", analysis.links.versions)
+  );
+  if (analysis.links.releases) {
+    links.push(safeLink("Releases", analysis.links.releases));
+  }
   if (analysis.links.homepage) {
     links.push(safeLink("Homepage", analysis.links.homepage));
   }

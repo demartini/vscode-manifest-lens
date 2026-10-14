@@ -389,6 +389,28 @@ describe("ManifestAnalyzer", () => {
     assert.equal(open.selection?.heldBack.length, 0);
   });
 
+  it("links the npm versions tab and, for known hosts, the repository releases", async () => {
+    const { analyzer, registry, request } = setup({
+      dependencies: { a: "^1.0.0", b: "^1.0.0" },
+    });
+    registry.add(
+      pkg("a", { "1.0.0": {} }, undefined, {
+        repositoryUrl: "https://github.com/o/a",
+      })
+    );
+    registry.add(pkg("b", { "1.0.0": {} }));
+    const analysis = await analyzer.analyze(request);
+    assert.equal(
+      byName(analysis, "a").links.versions,
+      "https://www.npmjs.com/package/a?activeTab=versions"
+    );
+    assert.equal(
+      byName(analysis, "a").links.releases,
+      "https://github.com/o/a/releases"
+    );
+    assert.equal(byName(analysis, "b").links.releases, undefined);
+  });
+
   describe("package manager release age", () => {
     // The fake registry publishes every version 4 days before NOW (5760 minutes).
     const analyze = async (

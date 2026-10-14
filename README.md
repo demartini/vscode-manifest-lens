@@ -70,7 +70,7 @@ Manifest Lens checks the installed dependents of a package, the candidate versio
 
 ### Rich Hover Tooltips
 
-Hover a dependency to see the declared, installed, resolved, latest and latest-compatible versions, the available updates by severity, the release age, monthly downloads, deprecation notices, advisories with fixed versions and references, blockers and links to the package pages.
+Hover a dependency to see the declared, installed, resolved, latest and latest-compatible versions, the available updates by severity, the release age, monthly downloads, the license, deprecation notices, advisories with fixed versions and references, blockers and links to the package pages (npm, its versions tab and the repository releases). An update is flagged when it changes the license or needs a newer Node than your `engines.node` declares.
 
 ### CodeLens Summaries and Actions
 

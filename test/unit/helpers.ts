@@ -25,7 +25,8 @@ export interface FakeVersion {
 export const pkg = (
   name: string,
   versions: Record<string, FakeVersion | undefined>,
-  latest?: string
+  latest?: string,
+  extra: Partial<PackageMetadata> = {}
 ): PackageMetadata => {
   const entries: Record<string, VersionMetadata> = {};
   for (const [version, info] of Object.entries(versions)) {
@@ -50,6 +51,7 @@ export const pkg = (
     fetchedAt: NOW,
     name,
     versions: entries,
+    ...extra,
   };
 };
 

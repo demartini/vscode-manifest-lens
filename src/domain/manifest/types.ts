@@ -51,6 +51,8 @@ export interface ParsedManifest {
   readonly version?: string;
   /** The `packageManager` field, e.g. `pnpm@9.0.0`. */
   readonly packageManager?: string;
+  /** The Node range the project declares in `engines.node`. */
+  readonly nodeEngine?: string;
   /** Workspace globs from the manifest or `pnpm-workspace.yaml`. */
   readonly workspaces: readonly string[];
   readonly declarations: readonly DependencyDeclaration[];

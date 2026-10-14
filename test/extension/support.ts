@@ -47,7 +47,12 @@ export async function getApi(): Promise<ManifestLensTestApi> {
 export interface Packument {
   readonly versions: Record<
     string,
-    { peerDependencies?: Record<string, string>; deprecated?: string }
+    {
+      peerDependencies?: Record<string, string>;
+      deprecated?: string;
+      license?: string;
+      engines?: { node: string };
+    }
   >;
   readonly latest?: string;
 }

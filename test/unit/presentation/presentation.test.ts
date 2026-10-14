@@ -285,6 +285,95 @@ describe("hoverMarkdown", () => {
     assert.doesNotMatch(none, /held back/u);
   });
 
+  describe("release details", () => {
+    const hoverContext = {
+      now: NOW,
+      prereleaseEnabled: false,
+      projectNodeEngine: ">=18",
+      showLatestHint: true,
+    };
+    const withDetails = async (
+      releaseDetails: DependencyAnalysis["releaseDetails"]
+    ) => ({ ...(await analyzeAll()).get("patchy"), releaseDetails });
+
+    it("shows the license of the current version", async () => {
+      const text = hoverMarkdown(
+        await withDetails({ "1.0.0": { license: "MIT" } }),
+        hoverContext
+      );
+      assert.match(text, /License:\*\* `MIT`/u);
+      assert.doesNotMatch(text, /License changes/u);
+    });
+
+    it("warns when the update changes the license", async () => {
+      const text = hoverMarkdown(
+        await withDetails({
+          "1.0.0": { license: "MIT" },
+          "1.0.1": { license: "BUSL-1.1" },
+        }),
+        hoverContext
+      );
+      assert.match(
+        text,
+        /License changes in `1\.0\.1`:\*\* `MIT` → `BUSL-1\.1`/u
+      );
+    });
+
+    it("warns when the update needs a newer Node than the project declares", async () => {
+      const text = hoverMarkdown(
+        await withDetails({ "1.0.1": { nodeEngine: ">=22" } }),
+        hoverContext
+      );
+      assert.match(text, /`1\.0\.1` requires Node `>=22`/u);
+      assert.match(text, /declares `>=18`/u);
+    });
+
+    it("stays quiet when Node is compatible, unknown or undeclared", async () => {
+      const analysis = await withDetails({ "1.0.1": { nodeEngine: ">=16" } });
+      assert.doesNotMatch(
+        hoverMarkdown(analysis, hoverContext),
+        /requires Node/u
+      );
+      const incompatible = await withDetails({
+        "1.0.1": { nodeEngine: ">=22" },
+      });
+      assert.doesNotMatch(
+        hoverMarkdown(incompatible, {
+          ...hoverContext,
+          projectNodeEngine: undefined,
+        }),
+        /requires Node/u
+      );
+      assert.doesNotMatch(
+        hoverMarkdown(await withDetails({}), hoverContext),
+        /requires Node|License/u
+      );
+    });
+
+    it("links the versions tab and the repository releases", async () => {
+      const analysis = await withDetails({});
+      const text = hoverMarkdown(
+        {
+          ...analysis,
+          links: {
+            ...analysis.links,
+            releases: "https://github.com/o/r/releases",
+          },
+        },
+        hoverContext
+      );
+      assert.match(
+        text,
+        /\[Versions\]\(https:\/\/www\.npmjs\.com\/package\/patchy\?activeTab=versions\)/u
+      );
+      assert.match(
+        text,
+        /\[Releases\]\(https:\/\/github\.com\/o\/r\/releases\)/u
+      );
+      assert.doesNotMatch(hoverMarkdown(analysis, hoverContext), /Releases/u);
+    });
+  });
+
   it("states that registry failures are not up-to-date results", async () => {
     const { get } = await analyzeAll();
     const text = hoverMarkdown(get("offline"), {

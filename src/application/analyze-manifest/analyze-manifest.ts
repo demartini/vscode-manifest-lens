@@ -10,6 +10,7 @@ import {
   deriveStatus,
   summarize,
 } from "../../domain/dependency/analysis";
+import { npmVersionsUrl, releasesUrl } from "../../domain/dependency/links";
 import type {
   InstalledPackage,
   PackageMetadata,
@@ -804,6 +805,10 @@ export class ManifestAnalyzer {
       links: {
         ...(meta?.homepage === undefined ? {} : { homepage: meta.homepage }),
         npm: npmUrl(item.registryName),
+        ...(releasesUrl(meta?.repositoryUrl) === undefined
+          ? {}
+          : { releases: releasesUrl(meta?.repositoryUrl) }),
+        versions: npmVersionsUrl(item.registryName),
         ...(meta?.repositoryUrl === undefined
           ? {}
           : { repository: meta.repositoryUrl }),

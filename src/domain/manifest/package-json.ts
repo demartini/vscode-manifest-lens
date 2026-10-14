@@ -207,11 +207,15 @@ export function parsePackageJson(text: string): ParsedManifest {
   const name = stringValue(valueOf(root, "name"));
   const version = stringValue(valueOf(root, "version"));
   const packageManager = stringValue(valueOf(root, "packageManager"));
+  const nodeEngine = stringValue(
+    valueOf(valueOf(root, "engines"), "node")
+  )?.trim();
   return {
     declarations: collector.declarations,
     format: "package-json",
     issues,
     ...(name === undefined ? {} : { name }),
+    ...(nodeEngine === undefined || nodeEngine === "" ? {} : { nodeEngine }),
     ...(packageManager === undefined ? {} : { packageManager }),
     sections: collector.sections,
     ...(version === undefined ? {} : { version }),

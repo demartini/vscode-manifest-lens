@@ -279,3 +279,24 @@ describe("bun catalogs in package.json", () => {
     assert.ok(result.value.includes('"react": "catalog:"'));
   });
 });
+
+describe("parsePackageJson engines", () => {
+  it("reads the Node range the project declares", () => {
+    assert.equal(
+      parsePackageJson('{ "engines": { "node": ">=18" } }').nodeEngine,
+      ">=18"
+    );
+  });
+
+  it("ignores missing or malformed engines", () => {
+    for (const text of [
+      "{}",
+      '{ "engines": [] }',
+      '{ "engines": { "node": 18 } }',
+      '{ "engines": { "npm": ">=9" } }',
+      '{ "engines": { "node": "" } }',
+    ]) {
+      assert.equal(parsePackageJson(text).nodeEngine, undefined, text);
+    }
+  });
+});

@@ -51,6 +51,10 @@ export interface CatalogSource {
 
 export interface PackageLinks {
   readonly npm: string;
+  /** The versions tab on npmjs.com. */
+  readonly versions: string;
+  /** The repository's releases page, when its host layout is known. */
+  readonly releases?: string;
   readonly homepage?: string;
   readonly repository?: string;
 }

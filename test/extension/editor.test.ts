@@ -25,7 +25,13 @@ import {
 } from "./support";
 
 const PACKAGES = {
-  alpha: { versions: { "1.0.0": {}, "1.1.0": {}, "2.0.0": {} } },
+  alpha: {
+    versions: {
+      "1.0.0": { license: "MIT" },
+      "1.1.0": { license: "MIT" },
+      "2.0.0": { engines: { node: ">=22" }, license: "BUSL-1.1" },
+    },
+  },
   beta: { versions: { "1.0.0": {} } },
   gamma: { versions: { "1.0.0": {}, "2.0.0": {} } },
   vite: { versions: { "6.0.0": {}, "7.0.0": {} } },
@@ -141,10 +147,11 @@ describe("editor experience", function editorExperience() {
   });
 
   const prepare = async (
-    name: string
+    name: string,
+    manifest: object = MANIFEST
   ): Promise<{ uri: vscode.Uri; document: vscode.TextDocument }> => {
     testCase = await createCase(name);
-    await testCase.write("package.json", MANIFEST);
+    await testCase.write("package.json", manifest);
     await testCase.write("package-lock.json", "{}");
     for (const [pkg, version] of [
       ["alpha", "1.0.0"],
@@ -258,6 +265,38 @@ describe("editor experience", function editorExperience() {
         ? true
         : undefined;
     }, "the .npmrc policy to hold the new versions back");
+  });
+
+  it("shows the license, a license change and a Node mismatch in the hover", async () => {
+    const { document, uri } = await prepare("hover-details", {
+      ...MANIFEST,
+      engines: { node: ">=18" },
+    });
+    const hovers = await vscode.commands.executeCommand<vscode.Hover[]>(
+      "vscode.executeHoverProvider",
+      uri,
+      document.positionAt(document.getText().indexOf('"alpha"') + 2)
+    );
+    const text = hovers
+      .flatMap((hover) =>
+        hover.contents.map((content) =>
+          typeof content === "string" ? content : content.value
+        )
+      )
+      .join("\n");
+    assert.match(text, /License:\*\* `MIT`/u);
+    assert.match(
+      text,
+      /License changes in `2\.0\.0`:\*\* `MIT` → `BUSL-1\.1`/u
+    );
+    assert.match(
+      text,
+      /`2\.0\.0` requires Node `>=22`; this project declares `>=18`/u
+    );
+    assert.match(
+      text,
+      /\[Versions\]\(https:\/\/www\.npmjs\.com\/package\/alpha\?activeTab=versions\)/u
+    );
   });
 
   it("describes a dependency on hover with versions, advisories and blockers", async () => {

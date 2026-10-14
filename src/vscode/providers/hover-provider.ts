@@ -61,6 +61,9 @@ export class DependencyHoverProvider implements vscode.HoverProvider {
       ...(downloads === undefined ? {} : { monthlyDownloads: downloads }),
       now: this.deps.now(),
       prereleaseEnabled: config.prerelease.enabled,
+      ...(view.parsed.nodeEngine === undefined
+        ? {}
+        : { projectNodeEngine: view.parsed.nodeEngine }),
       showLatestHint: config.showLatestVersionHint,
     };
     const markdown = new vscode.MarkdownString(
