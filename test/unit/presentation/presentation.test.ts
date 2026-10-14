@@ -4,6 +4,7 @@ import { ManifestAnalyzer } from "../../../src/application/analyze-manifest/anal
 import type { DependencyAnalysis } from "../../../src/domain/dependency/analysis";
 import { parsePackageJson } from "../../../src/domain/manifest/package-json";
 import { annotationOf } from "../../../src/presentation/annotation";
+import { codeActionsFor } from "../../../src/presentation/code-actions";
 import { NO_FILTERS, matchesFilters } from "../../../src/presentation/filters";
 import { hoverMarkdown } from "../../../src/presentation/hover";
 import { lensesFor, sectionLens } from "../../../src/presentation/lenses";
@@ -472,5 +473,89 @@ describe("helpers", () => {
     assert.equal(formatRelativeTime("2025-01-01T00:00:00Z", NOW), "1 year ago");
     assert.equal(formatRelativeTime("garbage", NOW), undefined);
     assert.equal(formatRelativeTime(undefined, NOW), undefined);
+  });
+});
+
+describe("codeActionsFor", () => {
+  const lensContext = { prereleaseEnabled: false, showUpToDate: false };
+
+  it("offers an update and an update with install for a dependency with a target", async () => {
+    const { get } = await analyzeAll();
+    const patchy = get("patchy");
+    assert.deepEqual(
+      codeActionsFor(patchy, lensContext).map(
+        ({ args, command, preferred, title }) => ({
+          args,
+          command,
+          preferred,
+          title,
+        })
+      ),
+      [
+        {
+          args: [patchy.key, "1.0.1"],
+          command: "manifestLens.updateDependency",
+          preferred: true,
+          title: "Update patchy to 1.0.1",
+        },
+        {
+          args: [patchy.key, "1.0.1"],
+          command: "manifestLens.updateDependencyAndInstall",
+          preferred: false,
+          title: "Update patchy to 1.0.1 and install",
+        },
+      ]
+    );
+  });
+
+  it("offers the reviewed update when the target is blocked, and the compatible version when there is one", async () => {
+    const { get } = await analyzeAll();
+    const vite = get("vite");
+    const blocked = codeActionsFor(vite, lensContext);
+    assert.deepEqual(
+      blocked.map(({ command, title }) => ({ command, title })),
+      [
+        {
+          command: "manifestLens.updateBlockedDependency",
+          title: "Update vite to 7.0.0 (blocked, review the conflicts first)",
+        },
+      ]
+    );
+    assert.equal(blocked[0]?.preferred, false);
+    const withFallback = codeActionsFor(
+      {
+        ...vite,
+        compatibleCandidate: {
+          potentiallyBreaking: false,
+          severity: "minor",
+          version: "6.5.0",
+        },
+      },
+      lensContext
+    );
+    assert.ok(
+      withFallback.some(
+        (action) => action.title === "Update vite to 6.5.0 (compatible)"
+      )
+    );
+  });
+
+  it("offers nothing for up-to-date, failing or unsupported dependencies", async () => {
+    const { get } = await analyzeAll();
+    for (const name of ["current", "offline", "ws"]) {
+      assert.deepEqual(codeActionsFor(get(name), lensContext), [], name);
+    }
+  });
+
+  it("offers a prerelease only when prereleases are enabled", async () => {
+    const { get } = await analyzeAll();
+    const tagless = get("tagless");
+    const titles = (enabled: boolean) =>
+      codeActionsFor(tagless, {
+        ...lensContext,
+        prereleaseEnabled: enabled,
+      }).map((action) => action.title);
+    assert.ok(titles(true).some((title) => title.includes("prerelease")));
+    assert.ok(!titles(false).some((title) => title.includes("prerelease")));
   });
 });

@@ -299,6 +299,43 @@ describe("editor experience", function editorExperience() {
     );
   });
 
+  it("offers update quick fixes on a dependency line and applies one", async () => {
+    const { document, uri } = await prepare("code-actions");
+    const quickFixesAt = async (needle: string) => {
+      const position = document.positionAt(
+        document.getText().indexOf(needle) + 2
+      );
+      const actions = await vscode.commands.executeCommand<vscode.CodeAction[]>(
+        "vscode.executeCodeActionProvider",
+        uri,
+        new vscode.Range(position, position),
+        vscode.CodeActionKind.QuickFix.value
+      );
+      return actions.filter((action) => action.title.startsWith("Update "));
+    };
+    const alpha = await quickFixesAt('"alpha"');
+    assert.deepEqual(
+      alpha.map((action) => action.title),
+      ["Update alpha to 2.0.0", "Update alpha to 2.0.0 and install"]
+    );
+    assert.equal(alpha[0]?.isPreferred, true);
+    assert.equal(alpha[1]?.isPreferred, false);
+    assert.deepEqual(await quickFixesAt('"beta"'), [], "beta is up to date");
+    assert.deepEqual(await quickFixesAt('"dependencies"'), []);
+    const command = alpha[0]?.command;
+    assert.ok(command);
+    await vscode.commands.executeCommand(
+      command.command,
+      ...(command.arguments ?? [])
+    );
+    await waitFor(
+      () =>
+        document.getText().includes('"alpha": "^2.0.0"') ? true : undefined,
+      "the quick fix to update the manifest"
+    );
+    assert.equal(document.isDirty, false, "the manifest is saved");
+  });
+
   it("describes a dependency on hover with versions, advisories and blockers", async () => {
     const { document, uri } = await prepare("hover");
     const position = document.positionAt(

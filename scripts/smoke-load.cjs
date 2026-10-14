@@ -14,6 +14,8 @@ const standIn = () =>
 // Bundler interop copies the module's own keys, so the stand-in needs real ones.
 const vscodeStandIn = Object.fromEntries(
   [
+    "CodeAction",
+    "CodeActionKind",
     "CodeLens",
     "ConfigurationTarget",
     "DecorationRangeBehavior",

@@ -21,6 +21,7 @@ import { NpmRegistryClient } from "./infrastructure/registry/npm-registry-client
 import { OperationRunner } from "./vscode/commands/operation-runner";
 import { registerCommands } from "./vscode/commands/register-commands";
 import { UpdateController } from "./vscode/commands/update-controller";
+import { DependencyCodeActionProvider } from "./vscode/providers/code-action-provider";
 import { DependencyCodeLensProvider } from "./vscode/providers/codelens-provider";
 import { DecorationController } from "./vscode/providers/decoration-controller";
 import { DiagnosticsController } from "./vscode/providers/diagnostics-controller";
@@ -183,6 +184,13 @@ export function activate(
 
   track(
     vscode.languages.registerCodeLensProvider(SUPPORTED_SELECTOR, codeLens)
+  );
+  track(
+    vscode.languages.registerCodeActionsProvider(
+      SUPPORTED_SELECTOR,
+      new DependencyCodeActionProvider({ config: getConfig, views }),
+      DependencyCodeActionProvider.metadata
+    )
   );
   track(
     vscode.languages.registerHoverProvider(

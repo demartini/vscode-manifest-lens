@@ -76,6 +76,8 @@ Hover a dependency to see the declared, installed, resolved, latest and latest-c
 
 Above each dependency: `Resolved as 18.3.1 | Update to 19.3.0 | Install Update`. For conflicts: `19.3.0 blocked by 1 dependency | Install Blocked Update`. Above each section, a summary lens such as `3 updates available · 2 blocked — Update all` updates every eligible dependency at once, after a review step in which you can uncheck anything.
 
+The same updates are available as lightbulb quick fixes (`Ctrl+.` / `Cmd+.`) on a dependency line, for example `Update react to 19.3.0` and `Update react to 19.3.0 and install`, even when the CodeLens is turned off.
+
 ### Vulnerability Detection
 
 Advisories come from [OSV](https://osv.dev) and are published as Problems-panel diagnostics linked to the declaration. Manifest Lens asks for confirmation before applying an update that would _introduce_ an advisory.
