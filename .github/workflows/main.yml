@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches: [main]
+  # Reused by publish.yml so a release runs exactly the same gate and builds the .vsix once.
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Quality gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      - name: Setup project
+        uses: ./.github/actions/setup-project
+
+      - name: Format and lint
+        run: bun run check
+
+      - name: Type check
+        run: bun run check-types
+
+      - name: Unit and integration tests
+        run: bun run test:unit
+
+      - name: Build
+        run: bun run compile
+
+      - name: Package and validate contents
+        run: |
+          bun run package
+          bun run verify-package
+
+      - name: Audit production dependencies
+        run: bun run audit
+
+      - name: Upload .vsix
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: manifest-lens-vsix
+          path: "*.vsix"
+          if-no-files-found: error
+
+  extension-tests:
+    name: Extension tests (${{ matrix.os }})
+    needs: quality
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      - name: Setup project
+        uses: ./.github/actions/setup-project
+
+      - name: Run extension tests
+        run: xvfb-run -a bun run test
+        if: runner.os == 'Linux'
+
+      - name: Run extension tests
+        run: bun run test
+        if: runner.os != 'Linux'
