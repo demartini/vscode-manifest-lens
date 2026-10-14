@@ -187,6 +187,7 @@ All commands are in the **Manifest Lens** category.
 | `manifestLens.codeLens.enabled` | `true` | Show CodeLens entries. |
 | `manifestLens.codeLens.showUpToDate` | `false` | Show lenses for up-to-date dependencies. |
 | `manifestLens.codeLens.showOnStartup` | `true` | Show suggestions on startup. |
+| `manifestLens.minimumReleaseAge` | `0` | Do not suggest versions published less than this many minutes ago. |
 | `manifestLens.prerelease.enabled` | `false` | Suggest prereleases. |
 | `manifestLens.prerelease.tags` | `[]` | Restrict prereleases to these tags. |
 | `manifestLens.security.enabled` | `true` | Check advisories with OSV. |

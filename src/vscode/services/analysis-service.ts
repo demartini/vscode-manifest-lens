@@ -239,6 +239,7 @@ export class AnalysisService implements vscode.Disposable {
   private buildSettings(config: ManifestLensConfig): AnalysisSettings {
     return {
       concurrency: config.analysis.concurrency,
+      minimumReleaseAge: config.minimumReleaseAge,
       peerEnabled: config.peerDependencies.enabled,
       prerelease: {
         enabled: config.prerelease.enabled,

@@ -69,6 +69,7 @@ describe("performance targets", () => {
         resolveCatalog: () => undefined,
         settings: {
           concurrency: 8,
+          minimumReleaseAge: 0,
           peerEnabled: true,
           prerelease: { enabled: false, tags: [] },
           securityEnabled: true,

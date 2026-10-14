@@ -24,12 +24,19 @@ export interface PrereleasePolicy {
   readonly tags: readonly string[];
 }
 
+/** Versions published less than `minimumMs` ago are not suggested. */
+export interface ReleaseAgePolicy {
+  readonly minimumMs: number;
+  readonly now: number;
+}
+
 export interface VersionSelectionInput {
   readonly specifier: ParsedSpecifier;
   readonly releases: readonly ReleaseInfo[];
   readonly distTags: Readonly<Record<string, string>>;
   readonly installedVersion?: string;
   readonly prerelease: PrereleasePolicy;
+  readonly releaseAge?: ReleaseAgePolicy;
 }
 
 export interface VersionSelection {
@@ -46,10 +53,24 @@ export interface VersionSelection {
   readonly prerelease?: Candidate;
   /** Every stable candidate above the base, newest first. */
   readonly stableCandidates: readonly Candidate[];
+  /** Stable versions above the base that are too young to be suggested, newest first. */
+  readonly heldBack: readonly Candidate[];
 }
 
 const byVersionDesc = (a: ReleaseInfo, b: ReleaseInfo): number =>
   semver.rcompare(a.version, b.version);
+
+/** A release whose publication date is unknown is never held back: its age cannot be judged. */
+const isTooYoung = (
+  release: ReleaseInfo,
+  policy: ReleaseAgePolicy | undefined
+): boolean => {
+  if (policy === undefined || policy.minimumMs <= 0) {
+    return false;
+  }
+  const published = Date.parse(release.publishedAt ?? "");
+  return !Number.isNaN(published) && policy.now - published < policy.minimumMs;
+};
 
 const toCandidate = (base: string, release: ReleaseInfo): Candidate => ({
   potentiallyBreaking: isPotentiallyBreaking(base, release.version),
@@ -123,12 +144,23 @@ export function selectVersions(input: VersionSelectionInput): VersionSelection {
   )?.version;
 
   if (baseVersion === undefined) {
-    return { latestPublished, latestSatisfying, stableCandidates: [] };
+    return {
+      heldBack: [],
+      latestPublished,
+      latestSatisfying,
+      stableCandidates: [],
+    };
   }
 
   const base = semver.parse(baseVersion);
-  const stableCandidates = pool
-    .filter((release) => semver.gt(release.version, baseVersion))
+  const newer = pool.filter((release) =>
+    semver.gt(release.version, baseVersion)
+  );
+  const stableCandidates = newer
+    .filter((release) => !isTooYoung(release, input.releaseAge))
+    .map((release) => toCandidate(baseVersion, release));
+  const heldBack = newer
+    .filter((release) => isTooYoung(release, input.releaseAge))
     .map((release) => toCandidate(baseVersion, release));
   const firstWhere = (
     predicate: (version: semver.SemVer) => boolean
@@ -145,7 +177,8 @@ export function selectVersions(input: VersionSelectionInput): VersionSelection {
         (release) =>
           semver.prerelease(release.version) !== null &&
           semver.gt(release.version, threshold) &&
-          matchesPrereleaseTag(release.version, input.prerelease.tags)
+          matchesPrereleaseTag(release.version, input.prerelease.tags) &&
+          !isTooYoung(release, input.releaseAge)
       )
     : undefined;
   const prerelease = prereleaseRelease
@@ -154,6 +187,7 @@ export function selectVersions(input: VersionSelectionInput): VersionSelection {
 
   return {
     baseVersion,
+    heldBack,
     latestPublished,
     latestSatisfying,
     major: base ? firstWhere((v) => v.major > base.major) : undefined,

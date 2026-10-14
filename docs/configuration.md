@@ -12,6 +12,7 @@ All settings live under the `manifestLens` namespace. Invalid values never raise
 | `manifestLens.codeLens.enabled` | `true` | Master switch for CodeLens entries. |
 | `manifestLens.codeLens.showUpToDate` | `false` | Also show lenses for dependencies that are up to date. |
 | `manifestLens.codeLens.showOnStartup` | `true` | Show suggestions when the window opens (toggle per session from the editor toolbar). |
+| `manifestLens.minimumReleaseAge` | `0` | Minutes a version must have been published before it is suggested (`1440` = one day, `0` = off). Newer versions that are too young are listed in the hover as held back. Versions without a known publication date are never held back. |
 | `manifestLens.prerelease.enabled` | `false` | Suggest prereleases (never replaces a stable version silently). |
 | `manifestLens.prerelease.tags` | `[]` | Only prereleases whose first identifier is listed (`beta`, `rc`, `next`…). Empty = any. |
 | `manifestLens.security.enabled` | `true` | Query OSV for advisories. |

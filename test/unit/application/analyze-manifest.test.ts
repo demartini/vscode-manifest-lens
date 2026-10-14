@@ -36,6 +36,7 @@ const setup = (
     resolveCatalog: () => {},
     settings: {
       concurrency: 2,
+      minimumReleaseAge: 0,
       peerEnabled: true,
       prerelease: { enabled: false, tags: [] },
       securityEnabled: true,
@@ -358,12 +359,43 @@ describe("ManifestAnalyzer", () => {
     );
   });
 
+  it("holds back versions younger than the configured minimum release age", async () => {
+    const make = (minutes: number) => {
+      const { analyzer, registry, installed, request } = setup(
+        { dependencies: { a: "^1.0.0" } },
+        {
+          settings: {
+            concurrency: 2,
+            minimumReleaseAge: minutes,
+            peerEnabled: true,
+            prerelease: { enabled: false, tags: [] },
+            securityEnabled: true,
+          },
+        }
+      );
+      registry.add(pkg("a", { "1.0.0": {}, "1.1.0": {} }));
+      installed.add("a", "1.0.0");
+      return { analyzer, request };
+    };
+    // The fake registry publishes every version 4 days before NOW (5760 minutes).
+    const strict = make(7 * 1440);
+    const held = byName(await strict.analyzer.analyze(strict.request), "a");
+    assert.equal(held.selection?.target, undefined);
+    assert.equal(held.selection?.heldBack.length, 1);
+    assert.equal(held.status, "up-to-date");
+    const relaxed = make(1440);
+    const open = byName(await relaxed.analyzer.analyze(relaxed.request), "a");
+    assert.equal(open.selection?.target?.version, "1.1.0");
+    assert.equal(open.selection?.heldBack.length, 0);
+  });
+
   it("skips security and peer work when disabled", async () => {
     const { advisories, analyzer, registry, request } = setup(
       { dependencies: { a: "^1.0.0" } },
       {
         settings: {
           concurrency: 1,
+          minimumReleaseAge: 0,
           peerEnabled: false,
           prerelease: { enabled: false, tags: [] },
           securityEnabled: false,

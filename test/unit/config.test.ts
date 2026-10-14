@@ -9,6 +9,7 @@ describe("parseConfiguration", () => {
     assert.equal(config.cacheTimeout, 300_000);
     assert.equal(config.codeLens.enabled, true);
     assert.equal(config.codeLens.showUpToDate, false);
+    assert.equal(config.minimumReleaseAge, 0);
     assert.equal(config.prerelease.enabled, false);
     assert.deepEqual(config.prerelease.tags, []);
     assert.equal(config.security.enabled, true);
@@ -17,6 +18,20 @@ describe("parseConfiguration", () => {
     assert.equal(config.analysis.concurrency, 4);
     assert.equal(config.analysis.timeout, 10_000);
     assert.equal(config.logging.level, "warn");
+  });
+
+  it("accepts a minimum release age in minutes and rejects invalid values", () => {
+    assert.equal(
+      parseConfiguration({ minimumReleaseAge: 4320 }).minimumReleaseAge,
+      4320
+    );
+    for (const invalid of [-1, "3 days", 525_601, Number.NaN, null]) {
+      assert.equal(
+        parseConfiguration({ minimumReleaseAge: invalid }).minimumReleaseAge,
+        0,
+        `${String(invalid)} falls back to 0`
+      );
+    }
   });
 
   it("falls back per field when values are invalid instead of throwing", () => {

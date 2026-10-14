@@ -53,6 +53,7 @@ const analyze = async () => {
     resolveCatalog: () => {},
     settings: {
       concurrency: 2,
+      minimumReleaseAge: 0,
       peerEnabled: true,
       prerelease: { enabled: false, tags: [] },
       securityEnabled: true,

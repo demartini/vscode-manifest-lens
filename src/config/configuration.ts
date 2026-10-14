@@ -20,6 +20,7 @@ export function readConfiguration(): ManifestLensConfig {
     "cacheTimeout",
     "codeLens",
     "logging",
+    "minimumReleaseAge",
     "packageManager",
     "peerDependencies",
     "prerelease",

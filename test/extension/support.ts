@@ -52,10 +52,14 @@ export interface Packument {
   readonly latest?: string;
 }
 
+export const DEFAULT_PUBLISHED_AT = "2025-12-01T00:00:00.000Z";
+
 export interface FakeServer {
   readonly url: string;
   readonly requests: string[];
   delayMs: number;
+  /** Publication date reported for every version of every package. */
+  publishedAt: string;
   failing: Set<string>;
   close(): Promise<void>;
 }
@@ -76,6 +80,7 @@ const listen = async (
       }),
     delayMs: 0,
     failing: new Set(),
+    publishedAt: DEFAULT_PUBLISHED_AT,
     requests: [],
     url: "",
   };
@@ -120,7 +125,7 @@ export const startRegistry = async (
       "dist-tags": { latest: found.latest ?? versions.at(-1) },
       name,
       time: Object.fromEntries(
-        versions.map((version) => [version, "2025-12-01T00:00:00.000Z"])
+        versions.map((version) => [version, server.publishedAt])
       ),
       versions: Object.fromEntries(
         versions.map((version) => [

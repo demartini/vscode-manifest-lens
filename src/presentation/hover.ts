@@ -83,6 +83,12 @@ const updateLines = (
   if (available.length > 0) {
     lines.push(`**Available updates:** ${available.join(" · ")}`);
   }
+  if (selection.heldBack.length > 0) {
+    const count = selection.heldBack.length;
+    lines.push(
+      `_${count} newer ${count === 1 ? "version is" : "versions are"} held back by ${code("manifestLens.minimumReleaseAge")}._`
+    );
+  }
   const { target } = selection;
   const age = formatRelativeTime(target?.publishedAt, context.now);
   if (target && age) {

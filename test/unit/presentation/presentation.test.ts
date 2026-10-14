@@ -76,6 +76,7 @@ const analyzeAll = async () => {
     resolveCatalog: () => {},
     settings: {
       concurrency: 2,
+      minimumReleaseAge: 0,
       peerEnabled: true,
       prerelease: { enabled: true, tags: [] },
       securityEnabled: true,
@@ -256,6 +257,32 @@ describe("hoverMarkdown", () => {
     assert.match(vite, /Blocked by 1 dependency/u);
     assert.match(vite, /Downloads:\*\* 1\.2M/u);
     assert.match(vite, /npmjs\.com\/package\/vite/u);
+  });
+
+  it("says when newer versions are held back by the minimum release age", async () => {
+    const { get } = await analyzeAll();
+    const patchy = get("patchy");
+    const [candidate] = patchy.selection?.stableCandidates ?? [];
+    assert.ok(candidate && patchy.selection);
+    const held = hoverMarkdown(
+      {
+        ...patchy,
+        selection: {
+          ...patchy.selection,
+          heldBack: [candidate],
+          target: undefined,
+        },
+      },
+      { now: NOW, prereleaseEnabled: false, showLatestHint: true }
+    );
+    assert.match(held, /1 newer version is held back/u);
+    assert.match(held, /manifestLens\.minimumReleaseAge/u);
+    const none = hoverMarkdown(patchy, {
+      now: NOW,
+      prereleaseEnabled: false,
+      showLatestHint: true,
+    });
+    assert.doesNotMatch(none, /held back/u);
   });
 
   it("states that registry failures are not up-to-date results", async () => {

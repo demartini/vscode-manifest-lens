@@ -153,3 +153,89 @@ describe("selectVersions", () => {
     assert.equal(result.baseVersion, "1.1.0");
   });
 });
+
+describe("selectVersions with a minimum release age", () => {
+  const now = Date.parse("2026-01-10T00:00:00Z");
+  const DAY = 24 * 60 * 60 * 1000;
+  const ageOf = (days: number): string =>
+    new Date(now - days * DAY).toISOString();
+  const releaseAge = { minimumMs: 3 * DAY, now };
+  const select = (
+    published: Record<string, string | undefined>,
+    extra: Partial<Parameters<typeof selectVersions>[0]> = {}
+  ) =>
+    selectVersions({
+      distTags: {},
+      installedVersion: "1.0.0",
+      prerelease: noPre,
+      releaseAge,
+      releases: Object.entries(published).map(([version, publishedAt]) => ({
+        version,
+        ...(publishedAt === undefined ? {} : { publishedAt }),
+      })),
+      specifier: parseSpecifier("^1.0.0"),
+      ...extra,
+    });
+
+  it("holds back versions younger than the limit and targets the newest mature one", () => {
+    const result = select({
+      "1.0.0": ageOf(100),
+      "1.1.0": ageOf(5),
+      "1.2.0": ageOf(1),
+    });
+    assert.equal(result.target?.version, "1.1.0");
+    assert.deepEqual(
+      result.heldBack.map((candidate) => candidate.version),
+      ["1.2.0"]
+    );
+  });
+
+  it("allows a version that is exactly as old as the limit", () => {
+    const result = select({ "1.0.0": ageOf(100), "1.1.0": ageOf(3) });
+    assert.equal(result.target?.version, "1.1.0");
+    assert.deepEqual(result.heldBack, []);
+  });
+
+  it("never holds back a version whose publication date is unknown", () => {
+    const result = select({ "1.0.0": ageOf(100), "1.1.0": undefined });
+    assert.equal(result.target?.version, "1.1.0");
+    assert.deepEqual(result.heldBack, []);
+  });
+
+  it("offers no target when every newer version is too young, and still reports them", () => {
+    const result = select({ "1.0.0": ageOf(100), "1.1.0": ageOf(1) });
+    assert.equal(result.target, undefined);
+    assert.deepEqual(
+      result.heldBack.map((candidate) => candidate.version),
+      ["1.1.0"]
+    );
+    assert.equal(result.latestPublished, "1.1.0");
+  });
+
+  it("is a no-op without a limit or with a limit of zero", () => {
+    const published = { "1.0.0": ageOf(100), "1.1.0": ageOf(1) };
+    for (const age of [undefined, { minimumMs: 0, now }]) {
+      const result = select(published, {
+        ...(age === undefined
+          ? { releaseAge: undefined }
+          : { releaseAge: age }),
+      });
+      assert.equal(result.target?.version, "1.1.0");
+      assert.deepEqual(result.heldBack, []);
+    }
+  });
+
+  it("does not suggest a prerelease younger than the limit", () => {
+    const enabled = { enabled: true, tags: [] };
+    const young = select(
+      { "1.0.0": ageOf(100), "2.0.0-beta.1": ageOf(1) },
+      { prerelease: enabled }
+    );
+    assert.equal(young.prerelease, undefined);
+    const mature = select(
+      { "1.0.0": ageOf(100), "2.0.0-beta.1": ageOf(10) },
+      { prerelease: enabled }
+    );
+    assert.equal(mature.prerelease?.version, "2.0.0-beta.1");
+  });
+});

@@ -22,6 +22,8 @@ export const configurationSchema = z.object({
   logging: z.object({
     level: z.enum(["off", "error", "warn", "info", "debug"]).catch("warn"),
   }),
+  /** Minutes a version must have been published before it is suggested; 0 disables it. */
+  minimumReleaseAge: bounded(0, 0, 525_600),
   packageManager: z.enum(["auto", "npm", "pnpm", "yarn", "bun"]).catch("auto"),
   peerDependencies: z.object({ enabled: bool(true) }),
   prerelease: z.object({
@@ -60,6 +62,7 @@ export function parseConfiguration(
     cacheTimeout: raw.cacheTimeout,
     codeLens: section("codeLens"),
     logging: section("logging"),
+    minimumReleaseAge: raw.minimumReleaseAge,
     packageManager: raw.packageManager,
     peerDependencies: section("peerDependencies"),
     prerelease: section("prerelease"),

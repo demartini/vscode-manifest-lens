@@ -332,6 +332,13 @@
           "default": true,
           "markdownDescription": "Show version suggestions when the window opens. Use the editor toolbar to toggle them for the current session."
         },
+        "manifestLens.minimumReleaseAge": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 525600,
+          "markdownDescription": "Do not suggest versions published less than this many **minutes** ago (`1440` is one day). A guard against freshly published, possibly malicious releases. `0` disables it. Versions without a known publication date are never held back."
+        },
         "manifestLens.prerelease.enabled": {
           "type": "boolean",
           "default": false,

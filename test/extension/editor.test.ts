@@ -7,6 +7,7 @@ import * as vscode from "vscode";
 
 import type { ManifestLensTestApi } from "../../src/extension";
 import {
+  DEFAULT_PUBLISHED_AT,
   type FakeServer,
   type TestCase,
   createCase,
@@ -112,6 +113,7 @@ describe("editor experience", function editorExperience() {
       "registry",
       "codeLens.enabled",
       "codeLens.showUpToDate",
+      "minimumReleaseAge",
       "security.enabled",
     ]);
     await registry.close();
@@ -121,10 +123,12 @@ describe("editor experience", function editorExperience() {
   beforeEach(async () => {
     api.clearCaches();
     registry.delayMs = 0;
+    registry.publishedAt = DEFAULT_PUBLISHED_AT;
     registry.failing.clear();
     await resetConfig([
       "codeLens.enabled",
       "codeLens.showUpToDate",
+      "minimumReleaseAge",
       "security.enabled",
     ]);
     api.ui.setSuggestionsVisible(true);
@@ -214,6 +218,26 @@ describe("editor experience", function editorExperience() {
         (await lensTitles(uri)).includes("Up to date") ? true : undefined,
       "up-to-date lens"
     );
+  });
+
+  it("holds back freshly published versions when a minimum release age is set", async () => {
+    registry.publishedAt = new Date().toISOString();
+    // A background analysis may already have cached the previous publication date.
+    api.clearCaches();
+    const { uri } = await prepare("fresh");
+    const selectionOf = () =>
+      api.analysis
+        .get(uri.toString())
+        ?.analysis?.items.find((item) => item.declaration.name === "alpha")
+        ?.selection;
+    assert.ok(selectionOf()?.target, "alpha has an update before the limit");
+    await setConfig("minimumReleaseAge", 1440);
+    await waitFor(() => {
+      const selection = selectionOf();
+      return selection?.target === undefined && selection?.heldBack.length
+        ? true
+        : undefined;
+    }, "the new versions to be held back");
   });
 
   it("describes a dependency on hover with versions, advisories and blockers", async () => {

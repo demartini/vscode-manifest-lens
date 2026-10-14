@@ -51,6 +51,8 @@ import {
 } from "../ports";
 
 export interface AnalysisSettings {
+  /** Minutes a version must have been published before it is suggested; 0 disables it. */
+  readonly minimumReleaseAge: number;
   readonly prerelease: PrereleasePolicy;
   readonly securityEnabled: boolean;
   readonly peerEnabled: boolean;
@@ -453,6 +455,10 @@ export class ManifestAnalyzer {
           selectVersions({
             distTags: result.value.distTags,
             prerelease: request.settings.prerelease,
+            releaseAge: {
+              minimumMs: request.settings.minimumReleaseAge * 60_000,
+              now: this.deps.clock.now(),
+            },
             releases: toReleases(result.value),
             specifier: item.specifier,
             ...(version === undefined ? {} : { installedVersion: version }),
