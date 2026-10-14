@@ -5,7 +5,8 @@ Manifest Lens is built around **one analysis engine that every UI surface consum
 ```text
 ┌──────────────────────────────────────────────────┐
 │ VS Code adapter (src/vscode, src/extension.ts)   │
-│ CodeLens · Hover · Decorations · Diagnostics     │
+│ CodeLens · Quick fixes · Hover · Decorations ·   │
+│ Diagnostics                                      │
 │ Status bar · Tree view · Commands · Editor events│
 ├──────────────────────────────────────────────────┤
 │ Presentation (src/presentation)                  │
@@ -29,7 +30,7 @@ Dependencies point inward: `vscode / infrastructure → application → domain`.
 
 ## Core data flow
 
-1. `WorkspaceIndex` discovers `package.json` / `pnpm-workspace.yaml` files (never inside `node_modules`), parses them and keeps the index fresh through file watchers and document events.
+1. `WorkspaceIndex` discovers `package.json`, `pnpm-workspace.yaml` and `.yarnrc.yml` files (never inside `node_modules`), parses them and keeps the index fresh through file watchers and document events.
 2. `AnalysisService` owns one _slot_ per manifest. Requests are debounced; a newer request aborts the older one; a result is stored only if its generation is still current **and** the document version it was computed for is still the document's version. Failed refreshes keep the previous analysis, flagged stale.
 3. `ManifestAnalyzer` (application) turns a parsed manifest into a `ManifestAnalysis`: registry metadata → installed versions → version selection → peer analysis → OSV advisories → per dependency `DependencyAnalysis` + a summary.
 4. Providers read the analysis and map it onto the _current_ document text (`DocumentViews`), so ranges stay correct while the user types and results for a changed specifier are dropped rather than shown wrongly.
@@ -49,6 +50,14 @@ Dependencies point inward: `vscode / infrastructure → application → domain`.
 Update severity is the literal semver distance between base and candidate. `0.x` releases are _classified literally_ (`0.3.0 → 0.4.0` is `minor`) and additionally flagged `potentiallyBreaking`, because semver treats minor bumps below 1.0 as breaking. Severity labels are never a guarantee of compatibility.
 
 Prereleases are suggested only when enabled, only when newer than every stable candidate, and only for the configured prerelease identifiers.
+
+### Minimum release age
+
+A release younger than the minimum is not a candidate: it is excluded from `target`, `major`, `minor` and `patch` and listed in `selection.heldBack`, which the hover reports. The limit is computed per version as the stricter of `manifestLens.minimumReleaseAge` and the project's package manager policy (`readManagerReleaseAge`, which reads `pnpm-workspace.yaml`, `bunfig.toml`, `.npmrc` or `.yarnrc.yml` from the detected install root). The manager's exclusions (`isExcludedFromReleaseAge`: names, globs and exact versions) lift only the manager's part, never the user's own setting. A release without a publication date is never held back, because its age cannot be judged. Only explicit settings are read, not defaults a newer manager version applies by itself.
+
+### Release details
+
+`DependencyAnalysis.releaseDetails` carries the license and `engines.node` of the current version and of every update candidate. The hover shows the license, warns when the update changes it, and warns when the update needs a Node version the project's own `engines.node` does not cover. That check is a subset test (`nodeCompatibility`): every Node version the project declares must be admitted by the release. Missing or unparsable ranges are unknown and never produce a warning.
 
 ### Specifier rewriting
 

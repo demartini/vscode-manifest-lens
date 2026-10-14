@@ -25,6 +25,7 @@
   - [Rich Hover Tooltips](#rich-hover-tooltips)
   - [CodeLens Summaries and Actions](#codelens-summaries-and-actions)
   - [Vulnerability Detection](#vulnerability-detection)
+  - [Minimum Release Age](#minimum-release-age)
   - [Status Bar](#status-bar)
   - [Sidebar Dashboard](#sidebar-dashboard)
   - [Safe, Workspace-Aware Edits](#safe-workspace-aware-edits)
@@ -81,6 +82,10 @@ The same updates are available as lightbulb quick fixes (`Ctrl+.` / `Cmd+.`) on 
 ### Vulnerability Detection
 
 Advisories come from [OSV](https://osv.dev) and are published as Problems-panel diagnostics linked to the declaration. Manifest Lens asks for confirmation before applying an update that would _introduce_ an advisory.
+
+### Minimum Release Age
+
+A freshly published version can be a malicious one. Set `manifestLens.minimumReleaseAge` (in minutes, `1440` is one day) and versions younger than that are not suggested; the hover says how many newer versions are held back. The minimum release age already configured for the project's package manager is honoured too (pnpm, Bun, npm and Yarn), and the stricter of the two applies. See [docs/configuration.md](docs/configuration.md#minimum-release-age-from-the-package-manager).
 
 ### Status Bar
 

@@ -10,6 +10,10 @@
 
 No telemetry is collected. Requests carry a `User-Agent` of `manifest-lens-vscode` and never an `Authorization` header or cookies. URLs must be `https://` (plain `http://` only for loopback hosts) and must not embed credentials; response bodies are size-limited and validated with schemas before use.
 
+## Package manager configuration files
+
+To honour the project's minimum release age, the extension reads one local file from the install root of the detected package manager: `pnpm-workspace.yaml`, `bunfig.toml`, `.npmrc` or `.yarnrc.yml`. Only the release age keys (and their exclusion lists) are extracted. Registry settings and credentials in those files, such as `_authToken`, are never read or used, and nothing from them is logged or sent anywhere. A malformed file is ignored.
+
 ## Process execution
 
 - Only install commands are run, and only after an explicit user action (lens, command, or dashboard action).
