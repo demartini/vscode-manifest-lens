@@ -5,6 +5,7 @@ import { manifestFormatOf } from "../../domain/manifest/parse";
 export const SUPPORTED_SELECTOR: vscode.DocumentSelector = [
   { pattern: "**/package.json", scheme: "file" },
   { pattern: "**/pnpm-workspace.{yaml,yml}", scheme: "file" },
+  { pattern: "**/.yarnrc.yml", scheme: "file" },
 ];
 
 const IGNORED_PATH = /[\\/](?:node_modules|\.git|\.yarn)[\\/]/u;

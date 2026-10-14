@@ -124,6 +124,75 @@ describe("catalogs", function catalogs() {
     );
   });
 
+  it("analyzes .yarnrc.yml catalogs and updates them in place, preserving quoting", async () => {
+    testCase = await createCase("yarn-catalog");
+    await testCase.write(
+      ".yarnrc.yml",
+      "nodeLinker: node-modules\ncatalog:\n  react: ^18.2.0\ncatalogs:\n  legacy:\n    zod: '~3.0.0'\n"
+    );
+    await testCase.write("package.json", { name: "root", private: true });
+    const yarnrcUri = testCase.uri(".yarnrc.yml");
+    const document = await openText(yarnrcUri);
+    await waitForAnalysis(api, yarnrcUri);
+    const titles = await lensTitles(yarnrcUri);
+    assert.ok(titles.includes("Update to 19.0.0"), titles.join(" | "));
+    assert.ok(titles.includes("Update to 3.5.0"));
+    await vscode.commands.executeCommand(
+      "manifestLens.updateDependency",
+      item(yarnrcUri, "zod").key,
+      "3.5.0"
+    );
+    await waitFor(
+      () => (document.getText().includes("zod: '~3.5.0'") ? true : undefined),
+      "single-quoted YAML value to be rewritten in place"
+    );
+    assert.equal(document.isDirty, false);
+    assert.ok(document.getText().includes("nodeLinker: node-modules"));
+    assert.ok(document.getText().includes("react: ^18.2.0"));
+  });
+
+  it("resolves catalog: and catalog:name references to .yarnrc.yml entries", async () => {
+    testCase = await createCase("yarn-catalog-ref");
+    await testCase.write(
+      ".yarnrc.yml",
+      "catalog:\n  react: ^18.2.0\ncatalogs:\n  legacy:\n    zod: '~3.0.0'\n"
+    );
+    await testCase.write("package.json", {
+      name: "root",
+      private: true,
+      workspaces: ["packages/*"],
+    });
+    await testCase.write("packages/app/package.json", {
+      dependencies: { react: "catalog:", zod: "catalog:legacy" },
+      name: "@m/app",
+    });
+    await api.index.scan();
+    const manifestUri = testCase.uri("packages/app/package.json");
+    const yarnrcUri = testCase.uri(".yarnrc.yml");
+    const document = await openText(manifestUri);
+    await waitForAnalysis(api, manifestUri);
+    const react = item(manifestUri, "react");
+    assert.equal(react.support.kind, "supported");
+    assert.equal(react.catalogSource?.manifestUri, yarnrcUri.toString());
+    assert.equal(react.selection?.target?.version, "19.0.0");
+    const zod = item(manifestUri, "zod");
+    assert.equal(zod.catalogSource?.manifestUri, yarnrcUri.toString());
+    await vscode.commands.executeCommand(
+      "manifestLens.updateDependency",
+      zod.key,
+      "3.5.0"
+    );
+    const yarnrc = await vscode.workspace.openTextDocument(yarnrcUri);
+    await waitFor(
+      () => (yarnrc.getText().includes("zod: '~3.5.0'") ? true : undefined),
+      "named catalog entry update"
+    );
+    assert.ok(
+      document.getText().includes('"zod": "catalog:legacy"'),
+      "the reference is left untouched"
+    );
+  });
+
   it("supports Bun's workspaces.catalog in package.json", async () => {
     testCase = await createCase("bun-catalog");
     await testCase.write("package.json", {

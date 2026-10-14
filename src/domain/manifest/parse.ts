@@ -1,6 +1,7 @@
 import { parsePackageJson } from "./package-json";
 import { parsePnpmWorkspace } from "./pnpm-workspace";
 import type { ManifestFormat, ParsedManifest } from "./types";
+import { parseYarnrc } from "./yarnrc";
 
 /** Returns the manifest format for a file path, or undefined for unrelated files. */
 export function manifestFormatOf(path: string): ManifestFormat | undefined {
@@ -11,7 +12,7 @@ export function manifestFormatOf(path: string): ManifestFormat | undefined {
   if (name === "pnpm-workspace.yaml" || name === "pnpm-workspace.yml") {
     return "pnpm-workspace";
   }
-  return undefined;
+  return name === ".yarnrc.yml" ? "yarnrc" : undefined;
 }
 
 /** Parses manifest text according to the format implied by the file name. */
@@ -23,5 +24,8 @@ export function parseManifestText(
   if (format === "package-json") {
     return parsePackageJson(text);
   }
-  return format === "pnpm-workspace" ? parsePnpmWorkspace(text) : undefined;
+  if (format === "pnpm-workspace") {
+    return parsePnpmWorkspace(text);
+  }
+  return format === "yarnrc" ? parseYarnrc(text) : undefined;
 }

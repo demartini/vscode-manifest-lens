@@ -87,7 +87,7 @@ const requireManifest = (): vscode.TextDocument | undefined => {
   const document = activeManifest();
   if (!document) {
     void vscode.window.showInformationMessage(
-      "Manifest Lens: open a package.json or pnpm-workspace.yaml first."
+      "Manifest Lens: open a package.json, pnpm-workspace.yaml or .yarnrc.yml first."
     );
   }
   return document;

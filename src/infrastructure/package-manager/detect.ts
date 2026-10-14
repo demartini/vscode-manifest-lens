@@ -17,6 +17,8 @@ const LOCKFILES: readonly (readonly [string, PackageManagerName])[] = [
   ["pnpm-lock.yaml", "pnpm"],
   ["pnpm-workspace.yaml", "pnpm"],
   ["yarn.lock", "yarn"],
+  // Yarn 2+ configuration: present before the first install creates `yarn.lock`.
+  [".yarnrc.yml", "yarn"],
   ["package-lock.json", "npm"],
   ["npm-shrinkwrap.json", "npm"],
 ];

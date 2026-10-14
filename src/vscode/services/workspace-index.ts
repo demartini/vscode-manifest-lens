@@ -19,7 +19,7 @@ export interface IndexedManifest {
 }
 
 const MANIFEST_GLOB =
-  "**/{package.json,pnpm-workspace.yaml,pnpm-workspace.yml}";
+  "**/{package.json,pnpm-workspace.yaml,pnpm-workspace.yml,.yarnrc.yml}";
 const EXCLUDE_GLOB = "**/{node_modules,.git,.yarn,dist,out}/**";
 const MAX_MANIFESTS = 2000;
 const READ_CONCURRENCY = 16;

@@ -94,7 +94,7 @@ A tree in the activity bar that lists manifests → sections → dependencies �
 
 - Minimal text edits that preserve formatting, comments and range operators (`^`, `~`, `1.x`, aliases).
 - Every edit is validated against the analyzed text, so concurrent changes are never overwritten.
-- Monorepos, `workspace:` packages, npm aliases, `pnpm-workspace.yaml` catalogs, `catalog:` references and Bun catalogs are understood.
+- Monorepos, `workspace:` packages, npm aliases, `pnpm-workspace.yaml` and Yarn (`.yarnrc.yml`, Yarn 4.10+) catalogs, `catalog:` references and Bun catalogs are understood.
 - npm, pnpm, Yarn and Bun are detected from the lockfile, and installs run from the lockfile's root.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
@@ -146,6 +146,7 @@ A tree in the activity bar that lists manifests → sections → dependencies �
 | `package.json` | `overrides` (npm), `resolutions` (Yarn), `pnpm.overrides` |
 | `package.json` (Bun) | `catalog`, `catalogs` and `workspaces.catalog`, plus `catalog:` references |
 | `pnpm-workspace.yaml` | `catalog` and named `catalogs`, plus `catalog:` references from member packages |
+| `.yarnrc.yml` (Yarn 4.10+) | `catalog` and named `catalogs`, plus `catalog:` and `catalog:name` references from member packages |
 
 Manifest Lens also understands `workspace:` packages and npm aliases (`npm:pkg@^1.0.0`). Complex ranges (`>=1 <2`, `||`), dist-tags and protocol specifiers are analyzed but not rewritten automatically.
 

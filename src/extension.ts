@@ -275,7 +275,9 @@ export function activate(
       const uri = event.document.uri.toString();
       void index.refreshOne(uri).then(() => {
         analysis.request(uri);
-        if (manifestFormatOf(uri) === "pnpm-workspace") {
+        // Catalog files feed the `catalog:` references of every package.json.
+        const format = manifestFormatOf(uri);
+        if (format === "pnpm-workspace" || format === "yarnrc") {
           analysis.requestAll();
         }
       });

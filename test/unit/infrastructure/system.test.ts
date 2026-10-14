@@ -67,6 +67,45 @@ describe("detectPackageManager", () => {
     assert.equal(field.root, "/r");
   });
 
+  it("detects Yarn from its .yarnrc.yml when there is no yarn.lock yet", async () => {
+    const result = await detectPackageManager({
+      boundary: "/repo",
+      configured: "auto",
+      manifestDir: "/repo/packages/app",
+      probe: probeOf({ "/repo/.yarnrc.yml": "nodeLinker: node-modules\n" }),
+    });
+    assert.equal(result.manager, "yarn");
+    assert.equal(result.root, "/repo");
+    assert.match(result.evidence, /\.yarnrc\.yml/u);
+  });
+
+  it("gives .yarnrc.yml precedence over an npm lockfile in the same directory", async () => {
+    const result = await detectPackageManager({
+      boundary: "/repo",
+      configured: "auto",
+      manifestDir: "/repo",
+      probe: probeOf({
+        "/repo/.yarnrc.yml": "",
+        "/repo/package-lock.json": "",
+      }),
+    });
+    assert.equal(result.manager, "yarn");
+  });
+
+  it("does not let .yarnrc.yml override a closer lockfile of another manager", async () => {
+    const result = await detectPackageManager({
+      boundary: "/repo",
+      configured: "auto",
+      manifestDir: "/repo/apps/web",
+      probe: probeOf({
+        "/repo/.yarnrc.yml": "",
+        "/repo/apps/web/pnpm-lock.yaml": "",
+      }),
+    });
+    assert.equal(result.manager, "pnpm");
+    assert.equal(result.root, "/repo/apps/web");
+  });
+
   it("lets configuration override the manager but keeps the lockfile root", async () => {
     const result = await detectPackageManager({
       boundary: "/r",

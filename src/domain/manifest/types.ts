@@ -1,4 +1,4 @@
-export type ManifestFormat = "package-json" | "pnpm-workspace";
+export type ManifestFormat = "package-json" | "pnpm-workspace" | "yarnrc";
 
 export type DependencySection =
   | "catalog"
