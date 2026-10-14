@@ -574,9 +574,11 @@ describe("editor experience", function editorExperience() {
     await api.index.scan();
     const uriB = testCase.uri("packages/b/package.json");
     await api.analysis.analyzeNow(uriB.toString());
-    const alphaB = api.analysis
-      .get(uriB.toString())
-      ?.analysis?.items.find((i) => i.declaration.name === "alpha");
+    // A newer request can supersede the run above, so wait for a settled result.
+    const state = await waitForAnalysis(api, uriB);
+    const alphaB = state.analysis?.items.find(
+      (i) => i.declaration.name === "alpha"
+    );
     assert.ok(alphaB);
     await vscode.commands.executeCommand("manifestLens.revealDeclaration", {
       key: alphaB.key,
