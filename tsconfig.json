@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "lib": ["ES2024"],
+    "module": "commonjs",
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noUncheckedIndexedAccess": true,
+    "outDir": "out",
+    "rootDir": ".",
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strict": true,
+    "target": "ES2024",
+    "types": ["mocha", "node"]
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts", "scripts/**/*.mts", "*.mts"],
+  "exclude": [".vscode-test", "dist", "node_modules", "out", "test/fixtures"]
+}

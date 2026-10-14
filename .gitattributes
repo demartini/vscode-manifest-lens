@@ -1,0 +1,118 @@
+# ============================================================
+# Base Rules — Text Normalization and Default Behavior
+# ============================================================
+
+# Automatically detect text files and normalize line endings (LF)
+* text=auto eol=lf
+
+# Ensure consistent LF endings for code and config files
+*.js     text eol=lf
+*.jsx    text eol=lf
+*.ts     text eol=lf
+*.tsx    text eol=lf
+*.json   text eol=lf
+*.mjs    text eol=lf
+*.cjs    text eol=lf
+*.yml    text eol=lf
+*.yaml   text eol=lf
+*.toml   text eol=lf
+*.env    text eol=lf
+*.sh     text eol=lf
+
+# Windows batch and PowerShell scripts use CRLF
+*.bat    text eol=crlf
+*.cmd    text eol=crlf
+*.ps1    text eol=crlf
+
+
+# ============================================================
+# Documentation and Text Files
+# ============================================================
+
+# Treat documentation files as text with readable diffs
+*.md     text diff=markdown
+*.mdx    text diff=markdown
+*.txt    text
+*.csv    text
+*.sql    text
+*.graphql text diff=graphql
+*.gql     text diff=graphql
+
+
+# ============================================================
+# Configuration and Serialization Files
+# ============================================================
+
+# Treat configuration and lock files as text
+*.lock        text
+*.eslint*     text
+*.prettierrc  text
+*.stylelintrc text
+*.editorconfig text
+
+
+# ============================================================
+# Binary Files
+# ============================================================
+
+# Mark binary assets so Git does not attempt to diff them
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.webp   binary
+*.ico    binary
+*.ttf    binary
+*.woff   binary
+*.woff2  binary
+*.zip    binary
+*.tar    binary
+*.gz     binary
+*.7z     binary
+*.pdf    binary
+*.mov    binary
+*.mp4    binary
+
+# SVG files are text by default (can be diffed)
+*.svg    text
+
+
+# ============================================================
+# Diff Drivers — Improve Diff Readability
+# ============================================================
+
+# Use specific diff drivers for certain file types
+*.md      diff=markdown
+*.mdx     diff=markdown
+*.json    diff=json
+*.yml     diff=yaml
+*.yaml    diff=yaml
+*.graphql diff=graphql
+
+
+# ============================================================
+# Export Settings — Exclude from git archive
+# ============================================================
+
+# Exclude metadata and development files from archives
+.gitattributes export-ignore
+.gitignore     export-ignore
+.gitkeep       export-ignore
+.editorconfig  export-ignore
+.prettierrc*   export-ignore
+.eslint*       export-ignore
+.vscode/       export-ignore
+.husky/        export-ignore
+.env*          export-ignore
+
+
+# ============================================================
+# Additional Rules
+# ============================================================
+
+# Preserve patch files exactly as-is
+*.patch -text
+
+# Prevent normalization for SQL dumps and backups
+*.dump  -text
+*.bak   -text

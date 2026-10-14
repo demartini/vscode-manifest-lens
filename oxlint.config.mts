@@ -1,0 +1,82 @@
+import { defineConfig } from "oxlint";
+import antiSlop from "ultracite/oxlint/anti-slop";
+import core from "ultracite/oxlint/core";
+
+export default defineConfig({
+  extends: [core, antiSlop],
+  ignorePatterns: [
+    ...(core.ignorePatterns ?? []),
+    ".vscode-test.mjs",
+    "scripts/*.cjs",
+    "out/**",
+    "test/fixtures/**",
+  ],
+  options: { typeAware: true },
+  overrides: [
+    {
+      // Tests deliberately poke at untyped payloads and use terse assertions.
+      files: ["test/**/*.ts"],
+      rules: {
+        "anti-slop/no-object-parameters": "off",
+        "no-script-url": "off",
+        "no-use-before-define": "off",
+        "sort-keys": "off",
+        "typescript/no-deprecated": "off",
+        "typescript/no-unsafe-argument": "off",
+        "typescript/no-unsafe-assignment": "off",
+        "typescript/no-unsafe-call": "off",
+        "typescript/no-unsafe-member-access": "off",
+        "typescript/no-unsafe-type-assertion": "off",
+        "typescript/strict-boolean-expressions": "off",
+        "typescript/strict-void-return": "off",
+        "unicorn/no-await-expression-member": "off",
+      },
+    },
+  ],
+  rules: {
+    // Stylistic rules relaxed for this codebase; correctness rules stay strict.
+    "anti-slop/no-array-filter-map": "off",
+    "anti-slop/no-conditional-empty-object-spread": "off",
+    "anti-slop/no-known-value-widening": "off",
+    "anti-slop/no-runtime-typeof": "off",
+    "anti-slop/no-unknown-parameters": "off",
+    "anti-slop/no-unknown-returns": "off",
+    "anti-slop/no-unsafe-dictionary-type": "off",
+    "anti-slop/require-readable-spacing": "off",
+    "anti-slop/require-safety-comment-for-type-assertion": "off",
+    "class-methods-use-this": "off",
+    complexity: ["error", { max: 35 }],
+    "func-style": "off",
+    "import/consistent-type-specifier-style": "off",
+    "max-classes-per-file": "off",
+    "no-await-in-loop": "off",
+    "no-promise-executor-return": "off",
+    "no-use-before-define": ["error", { functions: false }],
+    "no-void": "off",
+    "prefer-named-capture-group": "off",
+    "promise/avoid-new": "off",
+    "promise/param-names": "off",
+    "promise/prefer-await-to-callbacks": "off",
+    "promise/prefer-await-to-then": "off",
+    "promise/prefer-catch": "off",
+    "require-await": "off",
+    "typescript/consistent-return": "off",
+    "typescript/method-signature-style": "off",
+    "typescript/no-confusing-void-expression": "off",
+    "typescript/parameter-properties": "off",
+    "typescript/strict-boolean-expressions": [
+      "error",
+      {
+        allowNullableBoolean: true,
+        allowNullableObject: true,
+        allowNullableString: true,
+      },
+    ],
+    "typescript/switch-exhaustiveness-check": "off",
+    "unicorn/consistent-function-scoping": "off",
+    "unicorn/import-style": "off",
+    "unicorn/no-useless-spread": "off",
+    "unicorn/no-useless-undefined": "off",
+    "unicorn/prefer-code-point": "off",
+  },
+});
