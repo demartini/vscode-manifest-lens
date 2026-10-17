@@ -86,7 +86,7 @@ Advisories come from OSV. The client batches `(name, version)` queries, then fet
 
 ## Status bar counting rules
 
-`npm 5↑ 1✋ 2⚠`: `↑` dependencies with a non-blocked update; `✋` dependencies whose newest update has a confirmed peer conflict; `⚠` dependencies whose _current_ version has at least one advisory (one count per dependency however many advisories it has); `?` dependencies that could not be checked. The tooltip also shows the number of distinct advisories.
+`npm 5↑ 1✋ 2⚠`: `↑` dependencies with a non-blocked update; `✋` dependencies whose newest update has a confirmed peer conflict; `⚠` dependencies whose _current_ version has at least one advisory (one count per dependency however many advisories it has); `✗` dependencies whose declared version no published release satisfies (a version newer than the latest release, or a pin that does not exist; such a dependency is never reported as up to date and may also have an update, so it can count under `↑` too); `?` dependencies that could not be checked. The tooltip also shows the number of distinct advisories.
 
 ## Caching
 

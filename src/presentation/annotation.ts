@@ -97,6 +97,19 @@ const updatePart = (
   return { text, tone };
 };
 
+/** What a declaration whose version no release satisfies says instead of "up to date". */
+const unpublishedText = (analysis: DependencyAnalysis): string => {
+  const { selection } = analysis;
+  const latest =
+    selection?.latestPublished === undefined
+      ? ""
+      : ` (latest ${selection.latestPublished})`;
+  return selection?.unpublished?.reason === "ahead-of-latest" &&
+    selection.baseVersion !== undefined
+    ? `⚠ ${selection.baseVersion} is not published${latest}`
+    : `⚠ no published release matches${latest}`;
+};
+
 /** The end-of-line annotation for one dependency, or empty text when nothing should show. */
 export function annotationOf(
   analysis: DependencyAnalysis,
@@ -140,11 +153,18 @@ export function annotationOf(
     parts.push("⊘ deprecated");
     raise("warning");
   }
+  if (analysis.selection?.unpublished) {
+    parts.push(unpublishedText(analysis));
+    raise("warning");
+  }
   const update = updatePart(analysis, context);
   if (update) {
     parts.push(update.text);
     raise(update.tone);
-  } else if (analysis.selection?.target === undefined) {
+  } else if (
+    analysis.selection?.target === undefined &&
+    !analysis.selection?.unpublished
+  ) {
     parts.push("✓ up to date");
   }
   const pre = analysis.selection?.prerelease;

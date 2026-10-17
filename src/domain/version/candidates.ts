@@ -39,6 +39,12 @@ export interface VersionSelectionInput {
   readonly releaseAge?: ReleaseAgePolicy;
 }
 
+/** The declared range admits no published release, so "up to date" would be a false claim. */
+export interface Unpublished {
+  /** `ahead-of-latest`: newer than anything published (often a typo). Otherwise a gap or a removed release. */
+  readonly reason: "ahead-of-latest" | "no-matching-release";
+}
+
 export interface VersionSelection {
   /** The version updates are measured from. */
   readonly baseVersion?: string;
@@ -55,6 +61,8 @@ export interface VersionSelection {
   readonly stableCandidates: readonly Candidate[];
   /** Stable versions above the base that are too young to be suggested, newest first. */
   readonly heldBack: readonly Candidate[];
+  /** Set when no published release (stable or not, however young) satisfies the specifier. */
+  readonly unpublished?: Unpublished;
 }
 
 const byVersionDesc = (a: ReleaseInfo, b: ReleaseInfo): number =>
@@ -153,6 +161,18 @@ export function selectVersions(input: VersionSelectionInput): VersionSelection {
     };
   }
 
+  const unpublished: Unpublished | undefined = valid.some((release) =>
+    satisfiesSpecifier(spec, release.version)
+  )
+    ? undefined
+    : {
+        reason:
+          latestPublished !== undefined &&
+          semver.gt(baseVersion, latestPublished)
+            ? "ahead-of-latest"
+            : "no-matching-release",
+      };
+
   const base = semver.parse(baseVersion);
   const newer = pool.filter((release) =>
     semver.gt(release.version, baseVersion)
@@ -206,5 +226,6 @@ export function selectVersions(input: VersionSelectionInput): VersionSelection {
     prerelease,
     stableCandidates,
     target: stableCandidates[0],
+    ...(unpublished ? { unpublished } : {}),
   };
 }

@@ -471,6 +471,30 @@ describe("ManifestAnalyzer", () => {
     });
   });
 
+  it("never reports a declared version that is not published as up to date", async () => {
+    const { analyzer, registry, installed, request } = setup({
+      dependencies: { ahead: "^1.0.50", fine: "^1.0.5", typo: "1.0.3" },
+    });
+    registry.add(pkg("ahead", { "1.0.0": {}, "1.0.5": {} }));
+    registry.add(pkg("fine", { "1.0.0": {}, "1.0.5": {} }));
+    registry.add(pkg("typo", { "1.0.0": {}, "1.0.5": {} }));
+    installed.add("ahead", "1.0.5").add("fine", "1.0.5");
+    const analysis = await analyzer.analyze(request);
+    const ahead = byName(analysis, "ahead");
+    assert.equal(ahead.status, "unpublished");
+    assert.equal(ahead.selection?.unpublished?.reason, "ahead-of-latest");
+    assert.equal(ahead.selection?.baseVersion, "1.0.50");
+    assert.equal(ahead.selection?.latestPublished, "1.0.5");
+    // A pinned version that does not exist still has something newer to offer.
+    const typo = byName(analysis, "typo");
+    assert.equal(typo.selection?.unpublished?.reason, "no-matching-release");
+    assert.equal(typo.status, "update");
+    assert.equal(typo.selection?.target?.version, "1.0.5");
+    assert.equal(byName(analysis, "fine").status, "up-to-date");
+    assert.equal(analysis.summary.unpublished, 2);
+    assert.equal(analysis.summary.updates, 1);
+  });
+
   it("skips security and peer work when disabled", async () => {
     const { advisories, analyzer, registry, request } = setup(
       { dependencies: { a: "^1.0.0" } },

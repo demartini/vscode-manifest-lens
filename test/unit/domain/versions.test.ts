@@ -256,3 +256,87 @@ describe("selectVersions with a minimum release age", () => {
     assert.equal(mature.prerelease?.version, "2.0.0-beta.1");
   });
 });
+
+describe("selectVersions for a version that is not published", () => {
+  const published = releases(["26.6.0", "26.6.1", "26.6.5", "27.0.0-beta.2"]);
+  const check = (spec: string, installed?: string, list = published) =>
+    selectVersions({
+      distTags: { latest: "26.6.5" },
+      prerelease: noPre,
+      releases: list,
+      specifier: parseSpecifier(spec),
+      ...(installed === undefined ? {} : { installedVersion: installed }),
+    });
+
+  it("flags a version newer than anything published, and says so is not up to date", () => {
+    for (const spec of [
+      "^26.6.50",
+      "~26.6.50",
+      "26.6.50",
+      ">=26.6.50",
+      "^27.1.0",
+    ]) {
+      const result = check(spec, "26.6.5");
+      assert.equal(result.unpublished?.reason, "ahead-of-latest", spec);
+      assert.equal(result.target, undefined, spec);
+    }
+  });
+
+  it("flags a range no published release satisfies even when it is below the latest", () => {
+    assert.equal(check("26.6.3").unpublished?.reason, "no-matching-release");
+    assert.equal(check("~26.5.0").unpublished?.reason, "no-matching-release");
+    assert.equal(check("^25.0.0").unpublished?.reason, "no-matching-release");
+  });
+
+  it("accepts ranges that a published release satisfies", () => {
+    for (const spec of [
+      "^26.6.1",
+      "^26.6.5",
+      "26.6.5",
+      "~26.6.0",
+      ">=26.6.0",
+      "26.x",
+      "*",
+      "^26",
+    ]) {
+      assert.equal(check(spec, "26.6.5").unpublished, undefined, spec);
+    }
+  });
+
+  it("treats a published prerelease as published", () => {
+    assert.equal(check("^27.0.0-beta.1").unpublished, undefined);
+    assert.equal(check("27.0.0-beta.2").unpublished, undefined);
+  });
+
+  it("does not flag a deprecated or too-young release, which still exist", () => {
+    const list = [
+      { deprecated: "old", version: "1.0.0" },
+      { publishedAt: "2026-01-09T00:00:00Z", version: "1.1.0" },
+    ];
+    const result = selectVersions({
+      distTags: {},
+      prerelease: noPre,
+      releaseAge: {
+        limitMs: () => 7 * 24 * 60 * 60 * 1000,
+        now: Date.parse("2026-01-10T00:00:00Z"),
+      },
+      releases: list,
+      specifier: parseSpecifier("^1.1.0"),
+    });
+    assert.equal(result.unpublished, undefined);
+    assert.equal(check("^1.0.0", undefined, list).unpublished, undefined);
+  });
+
+  it("does not apply to tags, protocols or an empty release list of a non-range", () => {
+    assert.equal(check("latest").unpublished, undefined);
+    assert.equal(check("workspace:*").unpublished, undefined);
+  });
+
+  it("looks through npm aliases", () => {
+    assert.equal(
+      check("npm:pkg@^26.6.50").unpublished?.reason,
+      "ahead-of-latest"
+    );
+    assert.equal(check("npm:pkg@^26.6.1").unpublished, undefined);
+  });
+});

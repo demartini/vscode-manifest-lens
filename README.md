@@ -59,7 +59,7 @@ Each dependency line ends with a short status. Its color follows the most severe
 | --- | --- | --- |
 | Green | 🟩 `✓ up to date` | The resolved version is the latest compatible release. |
 | Blue | 🟦 `⬆ 4.18.1 (minor) — 6 months ago` | A minor or patch update is available, with its severity and age. |
-| Yellow | 🟨 `⬆ 5.3.0 (major)` · `✋ 19.3.0 blocked by react-dom` · `⊘ deprecated` | A major update, an update blocked by a peer dependency, or a deprecated package. |
+| Yellow | 🟨 `⬆ 5.3.0 (major)` · `✋ 19.3.0 blocked by react-dom` · `⊘ deprecated` · `⚠ 26.6.50 is not published (latest 26.6.5)` | A major update, an update blocked by a peer dependency, a deprecated package, or a declared version that no published release satisfies (never reported as up to date). |
 | Red | 🟥 `⚠ 4 advisories · ⬆ 4.18.1 (minor)` | Known vulnerabilities affect the resolved version. |
 | Grey | ⬜ `⟳ checking…` | Analysis is still in progress, or the file type is unsupported. |
 
@@ -89,7 +89,7 @@ A freshly published version can be a malicious one. Set `manifestLens.minimumRel
 
 ### Status Bar
 
-A compact summary of the active manifest, for example `npm 5↑ 1✋ 2⚠`: the detected package manager, available updates, blocked updates and advisories.
+A compact summary of the active manifest, for example `npm 5↑ 1✋ 2⚠`: the detected package manager, available updates, blocked updates and advisories. `✗` counts declared versions that are not published.
 
 ### Sidebar Dashboard
 

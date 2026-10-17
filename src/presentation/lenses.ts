@@ -150,7 +150,12 @@ export function lensesFor(
       title: `$(shield) ${advisories.length} ${advisories.length === 1 ? "advisory" : "advisories"}`,
     });
   }
-  if (!target && lenses.length === 0 && context.showUpToDate) {
+  if (
+    !target &&
+    lenses.length === 0 &&
+    context.showUpToDate &&
+    analysis.status !== "unpublished"
+  ) {
     lenses.push({
       args: [analysis.links.npm],
       command: COMMANDS.openPackagePage,
@@ -179,7 +184,10 @@ export function sectionLens(
     (skipped) => skipped.reason === "blocked"
   ).length;
   if (plan.eligible.length === 0 && blocked === 0) {
-    return context.showUpToDate && members.length > 0
+    const unpublished = members.some(
+      (member) => member.status === "unpublished"
+    );
+    return context.showUpToDate && members.length > 0 && !unpublished
       ? {
           args: [],
           command: COMMANDS.refresh,

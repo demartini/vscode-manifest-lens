@@ -65,6 +65,10 @@ const ICONS: Readonly<Record<DependencyAnalysis["status"], vscode.ThemeIcon>> =
       "warning",
       new vscode.ThemeColor("list.warningForeground")
     ),
+    unpublished: new vscode.ThemeIcon(
+      "warning",
+      new vscode.ThemeColor("list.warningForeground")
+    ),
     unsupported: new vscode.ThemeIcon(
       "circle-outline",
       new vscode.ThemeColor("disabledForeground")
@@ -455,6 +459,8 @@ export class DashboardProvider
       parts.push(label);
     } else if (analysis.status === "error") {
       parts.push("unavailable");
+    } else if (analysis.status === "unpublished") {
+      parts.push("✗ not published");
     }
     if (advisories > 0) {
       parts.push(`⚠ ${advisories}`);
@@ -480,6 +486,7 @@ export class DashboardProvider
     const kind = {
       blocked: "blocked",
       error: "error",
+      unpublished: "unpublished",
       unsupported: "unsupported",
       "up-to-date": "current",
       update: "updatable",

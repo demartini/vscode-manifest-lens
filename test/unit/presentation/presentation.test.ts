@@ -412,6 +412,7 @@ describe("status and filters", () => {
           advisories: 0,
           blocked: 0,
           errors: 0,
+          unpublished: 0,
           total: 1,
           unsupported: 0,
           updates: 0,
@@ -557,5 +558,118 @@ describe("codeActionsFor", () => {
       }).map((action) => action.title);
     assert.ok(titles(true).some((title) => title.includes("prerelease")));
     assert.ok(!titles(false).some((title) => title.includes("prerelease")));
+  });
+});
+
+describe("a declared version that is not published", () => {
+  const analyzeUnpublished = async () => {
+    const registry = new FakeRegistry()
+      .add(pkg("ahead", { "1.0.0": {}, "1.0.5": {} }))
+      .add(pkg("typo", { "1.0.0": {}, "1.0.5": {} }));
+    const analyzer = new ManifestAnalyzer({
+      advisories: new FakeAdvisories(),
+      clock: { now: () => NOW },
+      installed: new FakeInstalled().add("ahead", "1.0.5"),
+      registry,
+    });
+    const analysis = await analyzer.analyze({
+      documentVersion: 1,
+      localPackageNames: new Set(),
+      manifestDir: "/ws",
+      manifestUri: "file:///ws/package.json",
+      parsed: parsePackageJson(
+        JSON.stringify({ dependencies: { ahead: "^1.0.50", typo: "1.0.3" } })
+      ),
+      resolveCatalog: () => {},
+      settings: {
+        concurrency: 2,
+        minimumReleaseAge: 0,
+        peerEnabled: true,
+        prerelease: { enabled: false, tags: [] },
+        securityEnabled: true,
+      },
+      workspaceDependencyNames: [],
+    });
+    const get = (name: string): DependencyAnalysis => {
+      const item = analysis.items.find(
+        (entry) => entry.declaration.name === name
+      );
+      assert.ok(item);
+      return item;
+    };
+    return { analysis, get };
+  };
+  const annotationContext = {
+    minimumSeverity: "patch" as const,
+    now: NOW,
+    prereleaseEnabled: false,
+    securityEnabled: true,
+  };
+
+  it("is annotated as a warning, never as up to date", async () => {
+    const { get } = await analyzeUnpublished();
+    const ahead = annotationOf(get("ahead"), annotationContext);
+    assert.equal(ahead.text, "⚠ 1.0.50 is not published (latest 1.0.5)");
+    assert.equal(ahead.tone, "warning");
+    // The pinned version does not exist, but 1.0.5 is on offer: both are shown.
+    const typo = annotationOf(get("typo"), annotationContext);
+    assert.match(
+      typo.text,
+      /^⚠ no published release matches \(latest 1\.0\.5\) · ⬆ 1\.0\.5 \(patch\)/u
+    );
+    assert.doesNotMatch(`${ahead.text}${typo.text}`, /up to date/u);
+  });
+
+  it("explains itself in the hover", async () => {
+    const { get } = await analyzeUnpublished();
+    const hover = (name: string) =>
+      hoverMarkdown(get(name), {
+        now: NOW,
+        prereleaseEnabled: false,
+        showLatestHint: true,
+      });
+    assert.match(
+      hover("ahead"),
+      /Not published:\*\* `1\.0\.50` is newer than the latest release `1\.0\.5`/u
+    );
+    assert.match(
+      hover("typo"),
+      /Not published:\*\* no release satisfies `1\.0\.3`; the latest is `1\.0\.5`/u
+    );
+  });
+
+  it("shows no up-to-date lens and no section-wide all-up-to-date claim", async () => {
+    const { get } = await analyzeUnpublished();
+    const lensContext = { prereleaseEnabled: false, showUpToDate: true };
+    assert.ok(
+      !lensesFor(get("ahead"), lensContext).some(
+        (lens) => lens.kind === "up-to-date"
+      )
+    );
+    const [section] = parsePackageJson(
+      JSON.stringify({ dependencies: { ahead: "^1.0.50" } })
+    ).sections;
+    assert.ok(section);
+    assert.equal(
+      sectionLens(
+        "file:///ws/package.json",
+        section,
+        [get("ahead")],
+        lensContext
+      ),
+      undefined
+    );
+  });
+
+  it("is counted in the status bar", async () => {
+    const { analysis } = await analyzeUnpublished();
+    const status = statusFor("npm", {
+      kind: "ready",
+      partial: false,
+      summary: analysis.summary,
+    });
+    assert.match(status.text, /2✗/u);
+    assert.equal(status.tone, "warning");
+    assert.match(status.tooltip, /2 declared versions are not published/u);
   });
 });

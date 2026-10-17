@@ -40,6 +40,7 @@ export type DependencyStatus =
   | "blocked"
   | "error"
   | "unsupported"
+  | "unpublished"
   | "up-to-date"
   | "update";
 
@@ -107,6 +108,8 @@ export interface AnalysisSummary {
   readonly advisories: number;
   readonly errors: number;
   readonly unsupported: number;
+  /** Dependencies whose declared version no published release satisfies (they may also have an update). */
+  readonly unpublished: number;
 }
 
 export interface ManifestAnalysis {
@@ -170,7 +173,8 @@ export function deriveStatus(
   }
   const target = input.selection?.target;
   if (!target) {
-    return "up-to-date";
+    // Nothing newer to offer: that is only "up to date" if the declared version exists.
+    return input.selection?.unpublished ? "unpublished" : "up-to-date";
   }
   return input.peer[target.version]?.status === "blocked"
     ? "blocked"
@@ -186,6 +190,7 @@ export function summarize(
   let vulnerable = 0;
   let errors = 0;
   let unsupported = 0;
+  let unpublished = 0;
   for (const item of items) {
     if (item.status === "update") {
       updates += 1;
@@ -195,6 +200,9 @@ export function summarize(
       errors += 1;
     } else if (item.status === "unsupported") {
       unsupported += 1;
+    }
+    if (item.selection?.unpublished) {
+      unpublished += 1;
     }
     const advisories = currentAdvisories(item);
     if (advisories.length > 0) {
@@ -209,6 +217,7 @@ export function summarize(
     blocked,
     errors,
     total: items.length,
+    unpublished,
     unsupported,
     updates,
     vulnerable,

@@ -375,6 +375,37 @@ describe("editor experience", function editorExperience() {
     assert.equal(document.isDirty, false, "the manifest is saved");
   });
 
+  it("never calls a declared version that is not published up to date", async () => {
+    await setConfig("codeLens.showUpToDate", true);
+    const { document, uri } = await prepare("unpublished", {
+      dependencies: { alpha: "^2.5.0", beta: "^1.0.0" },
+    });
+    const alpha = api.analysis
+      .get(uri.toString())
+      ?.analysis?.items.find((item) => item.declaration.name === "alpha");
+    assert.equal(alpha?.status, "unpublished");
+    assert.equal(alpha?.selection?.unpublished?.reason, "ahead-of-latest");
+    const titles = await lensTitles(uri);
+    // beta is genuinely current and gets the lens; alpha does not.
+    assert.equal(titles.filter((title) => title === "Up to date").length, 1);
+    const hovers = await vscode.commands.executeCommand<vscode.Hover[]>(
+      "vscode.executeHoverProvider",
+      uri,
+      document.positionAt(document.getText().indexOf('"alpha"') + 2)
+    );
+    const text = hovers
+      .flatMap((hover) =>
+        hover.contents.map((content) =>
+          typeof content === "string" ? content : content.value
+        )
+      )
+      .join("\n");
+    assert.match(
+      text,
+      /Not published:\*\* `2\.5\.0` is newer than the latest release `2\.0\.0`/u
+    );
+  });
+
   it("describes a dependency on hover with versions, advisories and blockers", async () => {
     const { document, uri } = await prepare("hover");
     const position = document.positionAt(

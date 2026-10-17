@@ -53,6 +53,20 @@ const versionLine = (analysis: DependencyAnalysis): string[] => {
   return lines.filter((line): line is string => line !== undefined);
 };
 
+/** Why "up to date" does not apply: nothing published satisfies the declared version. */
+const unpublishedLine = (analysis: DependencyAnalysis): string => {
+  const { selection } = analysis;
+  const latest = selection?.latestPublished;
+  if (
+    selection?.unpublished?.reason === "ahead-of-latest" &&
+    selection.baseVersion !== undefined &&
+    latest !== undefined
+  ) {
+    return `⚠ **Not published:** ${code(selection.baseVersion)} is newer than the latest release ${code(latest)}. Check the version for a typo.`;
+  }
+  return `⚠ **Not published:** no release satisfies ${code(analysis.declaration.specifier)}${latest === undefined ? "" : `; the latest is ${code(latest)}`}.`;
+};
+
 /** Warnings about what the target release changes: its license and the Node it needs. */
 const targetReleaseWarnings = (
   analysis: DependencyAnalysis,
@@ -99,6 +113,9 @@ const updateLines = (
   const lines: string[] = [];
   if (!selection) {
     return lines;
+  }
+  if (selection.unpublished) {
+    lines.push(unpublishedLine(analysis));
   }
   if (context.showLatestHint) {
     const latest = selection.latestPublished;
