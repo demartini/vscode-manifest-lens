@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.1](https://github.com/demartini/vscode-manifest-lens/compare/v0.2.0...v0.2.1) (2026-10-17)
+
+### Bug Fixes
+
+- **analysis:** stop reporting a version that is not published as up to date ([289579e](https://github.com/demartini/vscode-manifest-lens/commit/289579e6678458863d1c609433d49e00caef0dcd))
+
 ## [0.2.0](https://github.com/demartini/vscode-manifest-lens/compare/v0.1.0...v0.2.0) (2026-10-14)
 
 ### Features

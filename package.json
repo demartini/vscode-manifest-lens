@@ -1,7 +1,7 @@
 {
   "name": "manifest-lens",
   "displayName": "Manifest Lens",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Understand, maintain and safely upgrade dependencies from your manifests: updates, peer dependency conflicts, OSV advisories and a dependency dashboard.",
   "categories": [
     "Linters",
